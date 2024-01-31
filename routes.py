@@ -55,8 +55,7 @@ def remove_genre_from_existing_book(book_id, genre_id):
     return jsonify(message="Genre removed from book"), 200
 
 
-# ############## Управление читателями:
-
+# Создание и редактирование читателей
 @app.route("/readers", methods=["POST"])
 def create_or_update_reader():
     '''Создание или редактирование данных о читателях'''

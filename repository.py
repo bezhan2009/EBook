@@ -1,12 +1,10 @@
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
-
 from sqlalchemy.orm import sessionmaker
 from connection import engine
 from models import Books, Authors, Genres, Readers, BorrowedBooks
 from datetime import datetime
 
-# ############## Управление книгами:
 
 Session = sessionmaker(bind=engine)
 
@@ -47,7 +45,6 @@ def remove_genre_from_book(_book, _genre_id):
             db.commit()
 
 
-# ############## Управление читателями:
 # Создать читателя
 def create_reader(reader_data: dict):
     with Session(autoflush=False, bind=engine) as db:
