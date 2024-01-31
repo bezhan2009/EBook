@@ -21,7 +21,7 @@ class Books(Base):
     # floor, row, rack, shelf
     book_location = Column(String(length=8), nullable=False,
                            default='00000000', server_default=text('00000000'))
-    other_attribute = Column(String(length=120))
+    description = Column(String(length=120))
     price = Column(Float, nullable=False)
     available_copies = Column(Integer, nullable=False,
                               default=0, server_default=text('0'))
@@ -42,6 +42,7 @@ class Authors(Base):
     id = Column(Integer, primary_key=True, autoincrement=True,
                 nullable=False, index=True)
     author_name = Column(String(length=70), nullable=False, unique=False)
+    description = Column(String)
 
 
 class BooksGenres(Base):
