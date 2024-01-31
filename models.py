@@ -1,4 +1,4 @@
-from modules.connection import engine
+from connection import engine
 from sqlalchemy.sql.expression import text
 from sqlalchemy import Column, String, Integer, SmallInteger, Numeric, Boolean, DateTime, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, relationship
@@ -21,6 +21,8 @@ class Books(Base):
     publication_date = Column(String(length=50), nullable=False, unique=False)
     number_of_copies = Column(Integer, nullable=False, unique=False)
     url_img = Column(String)
+    # floor, row, rack, shelf
+    book_location = Column(String(length=8), nullable=False)
 
 
 class BooksAuthors(Base):
