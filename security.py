@@ -2,7 +2,7 @@
 
 # for connect db
 
-dbname_app = "postgres"
+dbname_app = "ebook"
 user_app = "postgres"
 password_app = "Nik10185"
 host_app = "localhost"
