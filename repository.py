@@ -68,29 +68,58 @@ def remove_genre_from_book(_book, _genre_id):
 
 # ############## Управление читателями:
 
-def get_reader(reader_id: int):
+def create_reader(_reader_data):
     with Session(autoflush=False, bind=engine) as db:
-        return db.query(Readers).get(reader_id)
-
-
-def create_reader(reader_data: dict):
-    with Session(autoflush=False, bind=engine) as db:
-        reader = Readers(**reader_data)
+        reader = Readers(**_reader_data)
         db.add(reader)
         db.commit()
-        db.refresh(reader)
-        return reader
+        return reader, 200
 
 
-def update_reader(reader: Readers, updated_data: dict):
+def update_reader(_reader_data):
     with Session(autoflush=False, bind=engine) as db:
-        for key, value in updated_data.items():
+        reader_id = _reader_data.get("id")
+        reader = db.query(Readers).get(reader_id)
+        if not reader:
+            return None, 404
+        for key, value in _reader_data.items():
             setattr(reader, key, value)
         db.commit()
-        return reader
+        return reader, 200
 
 
-def delete_reader(reader: Readers):
+def get_all_readers():
     with Session(autoflush=False, bind=engine) as db:
-        db.delete(reader)
-        db.commit()
+        readers = db.query(Readers).all()
+        return readers, 200
+
+
+def get_single_reader(_reader_id):
+    with Session(autoflush=False, bind=engine) as db:
+        reader = db.query(Readers).get(_reader_id)
+        if not reader:
+            return None, 404
+        return reader, 200
+
+
+def get_reader_activity(_reader_id):
+    with Session(autoflush=False, bind=engine) as db:
+        reader = db.query(Readers).get(_reader_id)
+        if not reader:
+            return None, 404
+        borrowed_books = (
+            db.query(BorrowedBooks)
+            .join(Books)
+            .filter(BorrowedBooks.reader_id == _reader_id)
+            .all()
+        )
+        activity = []
+        for borrowed_book in borrowed_books:
+            book = borrowed_book.book
+            activity.append({
+                "book": book,
+                "date_borrowed": borrowed_book.date_borrowed,
+                "date_returned": borrowed_book.date_returned,
+                "is_returned": borrowed_book.is_returned
+            })
+        return activity, 200

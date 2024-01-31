@@ -85,58 +85,45 @@ def remove_genre_from_existing_book(book_id, genre_id):
 
 
 @app.route("/readers", methods=["POST"])
-def create_or_update_reader():
-    '''Создание или редактирование данных о читателях'''
+def create_reader_route():
+    '''Создание данных о читателях'''
     reader_data = request.json
-    reader_id = reader_data.get("id")
-    with Session(autoflush=False, bind=engine) as db:
-        if reader_id:
-            # Редактирование существующего читателя
-            reader = db.query(Readers).get(reader_id)
-            if not reader:
-                return jsonify(error="Reader not found"), 404
-            for key, value in reader_data.items():
-                setattr(reader, key, value)
-        else:
-            # Создание нового читателя
-            reader = Readers(**reader_data)
-            db.add(reader)
-        db.commit()
-        return jsonify(reader), 200
+    reader, status_code = repository.create_reader(reader_data)
+    if reader is None:
+        return jsonify(error="Reader not found"), status_code
+    return jsonify(reader), status_code
+
+
+@app.route("/readers", methods=["PUT"])
+def update_reader_route():
+    '''Редактирование данных о читателях'''
+    reader_data = request.json
+    reader, status_code = repository.update_reader(reader_data)
+    if reader is None:
+        return jsonify(error="Reader not found"), status_code
+    return jsonify(reader), status_code
 
 
 @app.route("/readers", methods=["GET"])
-def get_all_readers():
+def get_all_readers_route():
     '''Просмотр списка читателей'''
-    with Session(autoflush=False, bind=engine) as db:
-        readers = db.query(Readers).all()
-        return jsonify(readers), 200
+    readers, status_code = repository.get_all_readers()
+    return jsonify(readers), status_code
 
 
 @app.route("/readers/<reader_id>", methods=["GET"])
-def get_single_reader(reader_id):
+def get_single_reader_route(reader_id):
     '''Просмотр информации о конкретном читателе'''
-    with Session(autoflush=False, bind=engine) as db:
-        reader = db.query(Readers).get(reader_id)
-        if not reader:
-            return jsonify(error="Reader not found"), 404
-        return jsonify(reader), 200
+    reader, status_code = repository.get_single_reader(reader_id)
+    if reader is None:
+        return jsonify(error="Reader not found"), status_code
+    return jsonify(reader), status_code
 
 
 @app.route("/readers/<reader_id>/activity", methods=["GET"])
-def get_reader_activity(reader_id):
+def get_reader_activity_route(reader_id):
     '''Просмотр активности читателя'''
-    with Session(autoflush=False, bind=engine) as db:
-        reader = db.query(Readers).get(reader_id)
-        if not reader:
-            return jsonify(error="Reader not found"), 404
-        # Получение списка взятых книг и сроков возврата для данного читателя
-        loans = db.query(Loans).filter_by(reader_id=reader_id).all()
-        activity = []
-        for loan in loans:
-            book = db.query(Books).get(loan.book_id)
-            activity.append({
-                "book": book,
-                "due_date": loan.due_date
-            })
-        return jsonify(activity), 200
+    activity, status_code = repository.get_reader_activity(reader_id)
+    if activity is None:
+        return jsonify(error="Reader not found"), status_code
+    return jsonify(activity), status_code
