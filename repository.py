@@ -2,7 +2,7 @@ from sqlalchemy import and_
 
 from sqlalchemy.orm import Session, sessionmaker
 from connection import engine
-from models import Books, Authors, Genres, Readers
+from models import Books, Authors, Genres, BorrowedBooks, Readers, Orders
 
 # ############## Управление книгами:
 
@@ -123,3 +123,56 @@ def get_reader_activity(_reader_id):
                 "is_returned": borrowed_book.is_returned
             })
         return activity, 200
+
+
+# ############## Управление заказами:
+
+
+def create_order(_order_data):
+    with Session(autoflush=False, bind=engine) as db:
+        _book_ids = _order_data.get("book_ids")
+        _books = db.query(Books).filter(Books.id.in_(_book_ids)).all()
+
+        _order = Orders(books=_books, status="pending")
+        db.add(_order)
+        db.commit()
+
+        return _order, 200
+
+
+def update_order(_order_id, _status):
+    with Session(autoflush=False, bind=engine) as db:
+        _order = db.query(Orders).get(_order_id)
+        if not _order:
+            return None, 404
+
+        _order.status = _status
+        db.commit()
+
+        return _order, 200
+
+
+def get_order_details(_order_id):
+    with Session(autoflush=False, bind=engine) as db:
+        _order = db.query(Orders).get(_order_id)
+        if not _order:
+            return None, 404
+
+        _books = _order.books
+        _book_details = []
+        for _book in _books:
+            _book_details.append({
+                "id": _book.id,
+                "title": _book.title,
+                "author": _book.author
+            })
+
+        _order_details = {
+            "id": _order.id,
+            "status": _order.status,
+            "books": _book_details,
+            "created_at": _order.created_at,
+            "updated_at": _order.updated_at
+        }
+
+        return _order_details, 200

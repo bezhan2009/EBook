@@ -127,3 +127,34 @@ def get_reader_activity_route(reader_id):
     if activity is None:
         return jsonify(error="Reader not found"), status_code
     return jsonify(activity), status_code
+
+
+# ############## Управление заказами:
+
+@app.route("/orders", methods=["POST"])
+def create_order_route():
+    '''Регистрация новых заказов на книги'''
+    order_data = request.json
+    order, status_code = repository.create_order(order_data)
+    if order is None:
+        return jsonify(error="Order not found"), status_code
+    return jsonify(order), status_code
+
+
+@app.route("/orders/<int:order_id>", methods=["PUT"])
+def update_order_route(order_id):
+    '''Отметка заказов как выполненных или отклоненных'''
+    status = request.json.get("status")
+    order, status_code = repository.update_order(order_id, status)
+    if order is None:
+        return jsonify(error="Order not found"), status_code
+    return jsonify(order), status_code
+
+
+@app.route("/orders/<int:order_id>", methods=["GET"])
+def get_order_details_route(order_id):
+    '''Отображение деталей заказа, включая книги, статус и сроки'''
+    order_details, status_code = repository.get_order_details(order_id)
+    if order_details is None:
+        return jsonify(error="Order not found"), status_code
+    return jsonify(order_details), status_code
