@@ -1,4 +1,5 @@
 from sqlalchemy import and_
+from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy.orm import sessionmaker
 from connection import engine
@@ -8,22 +9,6 @@ from datetime import datetime
 # ############## Управление книгами:
 
 Session = sessionmaker(bind=engine)
-
-
-# Изменение книги
-def update_book(_book, _updated_data):
-    with Session(autoflush=False, bind=engine) as db:
-        for key, value in _updated_data.items():
-            setattr(_book, key, value)
-        db.commit()
-        return _book
-
-
-# Удаление книги
-def delete_book(_book):
-    with Session(autoflush=False, bind=engine) as db:
-        db.delete(_book)
-        db.commit()
 
 
 # Добавить автора для книги
@@ -63,12 +48,6 @@ def remove_genre_from_book(_book, _genre_id):
 
 
 # ############## Управление читателями:
-# Показать читателей
-def get_reader(reader_id: int):
-    with Session(autoflush=False, bind=engine) as db:
-        return db.query(Readers).get(reader_id)
-
-
 # Создать читателя
 def create_reader(reader_data: dict):
     with Session(autoflush=False, bind=engine) as db:
@@ -96,6 +75,8 @@ def delete_reader(reader: Readers):
 
 
 # ======================================= РАБОТАЕТ ==================================
+
+# === УПРАВЛЕНИЕ КНИГАМИ ===
 
 # Создание новой книги
 def create_book(_book_data):
@@ -154,6 +135,99 @@ def get_book(_book_id):
             return None
 
 
+# Изменение книги
+def update_book(_book, book_id, _updated_data):
+    with Session(autoflush=False, bind=engine) as db:
+        db.query(Books).filter(Books.id == book_id).update(_updated_data)
+        db.commit()
+        updated_book = db.query(Books).get(book_id)
+        serialized_book = {
+            'id': updated_book.id,
+            'title': updated_book.title,
+            'publication': updated_book.publication,
+            'publication_date': updated_book.publication_date.isoformat(),
+            'cover_image': updated_book.cover_image,
+            'book_location': updated_book.book_location,
+            'description': updated_book.description,
+            'price': updated_book.price,
+            'available_copies': updated_book.available_copies
+        }
+        return serialized_book
+
+
+# Удаление книги
+def delete_book(_book_id):
+    with Session(autoflush=False) as db:
+        book_to_delete = db.query(Books).filter_by(id=_book_id).first()
+        if book_to_delete:
+            db.delete(book_to_delete)
+            db.commit()
+            return True
+        else:
+            return False
+
+
+# === УПРАВЛЕНИЕ АВТОРАМИ ===
+
+# Создать автора
+def create_author(author_data):
+    existing_author = get_author_by_name(author_data['author_name'])
+    if existing_author:
+        return {'message': 'Автор с таким именем уже есть'}
+    new_author = Authors(author_name=author_data['author_name'],
+                         description=author_data.get('description'))
+    with Session(autoflush=False, bind=engine) as db:
+        try:
+            db.add(new_author)
+            db.commit()
+            db.refresh(new_author)
+            return {
+                'id': new_author.id,
+                'author_name': new_author.author_name,
+                'description': new_author.description
+            }
+        except IntegrityError:
+            db.rollback()
+            return {'message': 'Не удалось создать автора из-за нарушения ограничений базы данных'}
+
+
+# Получение автора по имени
+# (эта функция без роута, т.к. она нужна только
+# для проверки именни автора для функции create_author)
+def get_author_by_name(author_name):
+    with Session(bind=engine) as db:
+        return db.query(Authors).filter(Authors.author_name == author_name).first()
+
+
+# Получение списка всех авторов
+def get_all_authors():
+    with Session(bind=engine) as db:
+        authors = db.query(Authors).all()
+        author_list = []
+        for author in authors:
+            author_info = {
+                'id': author.id,
+                'author_name': author.author_name,
+                'description': author.description
+            }
+            author_list.append(author_info)
+        return author_list
+
+
+# Удаление автора
+def delete_author(author_id):
+    with Session(bind=engine) as db:
+        author = db.query(Authors).filter(Authors.id == author_id).first()
+        if author:
+            db.delete(author)
+            db.commit()
+            return True
+        else:
+            return False
+
+
+# === УПРАВЛЕНИЕ ЧИТАТЕЛЯМИ ===
+
 # Поиск активностей конкретного читателя
 def get_reader_activity(_reader_id):
     with Session(autoflush=False, bind=engine) as db:
@@ -176,3 +250,9 @@ def get_reader_activity(_reader_id):
                 "is_returned": borrowed_book.is_returned
             })
         return activity, 200
+
+
+# Показать читателей
+def get_reader(reader_id: int):
+    with Session(autoflush=False, bind=engine) as db:
+        return db.query(Readers).get(reader_id)
