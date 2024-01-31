@@ -2,9 +2,12 @@ from flask import jsonify, Blueprint, request
 import repository
 from connection import engine
 from models import Readers, Books
+from sqlalchemy.orm import sessionmaker
 
 app = Blueprint('routes', __name__)
 
+
+Session = sessionmaker(bind=engine)
 
 @app.route('/', methods=["GET"])
 def index():
@@ -24,7 +27,18 @@ def get_single_book(book_id):
     book = repository.get_book(book_id)
     if not book:
         return jsonify(error="Book not found"), 404
-    return jsonify(book), 200
+    else:
+        return jsonify(book), 200
+
+
+@app.route("/bookies", methods=["GET"])
+def get_single_book_all():
+    books = repository.get_book_all()
+    if not books:
+        return jsonify(error="Books not found"), 404
+    else:
+        return jsonify(books), 200
+
 
 
 @app.route("/books/<book_id>", methods=["PUT"])
@@ -42,8 +56,9 @@ def delete_existing_book(book_id):
     book = repository.get_book(book_id)
     if not book:
         return jsonify(error="Book not found"), 404
-    repository.delete_book(book)
-    return jsonify(message="Book deleted"), 200
+    else:
+        repository.delete_book(book)
+        return jsonify(message="Book deleted"), 200
 
 
 @app.route("/books/<book_id>/authors/<author_id>", methods=["POST"])
