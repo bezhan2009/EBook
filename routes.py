@@ -18,6 +18,23 @@ def create_new_book():
     book = repository.create_book(book_data)
     return jsonify(book), 200
 
+# @app.route("/books", methods=["POST"])
+# def create_new_book():
+#     book_data = request.json
+#     book = repository.create_book(book_data)
+#     return jsonify(book), 200
+
+# @app.route("/books", methods=["POST"])
+# def create_new_book():
+#     book_data = request.get_json()
+#     title = book_data["title"]
+#     if title:
+#         print(title)
+#     else:
+#         print('Нет данных...')
+#     book = repository.create_book(book_data)
+#     return jsonify(book), 200
+
 
 @app.route("/books/<book_id>", methods=["GET"])
 def get_single_book(book_id):

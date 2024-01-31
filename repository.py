@@ -12,7 +12,17 @@ def create_book(_book_data):
         book = Books(**_book_data)
         db.add(book)
         db.commit()
-        return book
+        if book:
+            return "Книга создана!!!"
+        else:
+            return False
+
+# def create_book(_book_data):
+#     with Session(autoflush=False, bind=engine) as db:
+#         book = Books(**_book_data)
+#         db.add(book)
+#         db.commit()
+#         return book
 
 
 def get_book(_book_id):
