@@ -1,9 +1,7 @@
 from connection import engine
+from sqlalchemy import Column, String, Integer, SmallInteger, Numeric, Float, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import DeclarativeBase, Session, relationship
 from sqlalchemy.sql.expression import text
-from sqlalchemy import Column, String, Integer, SmallInteger, Numeric, Boolean, DateTime, ForeignKey
-from sqlalchemy.orm import DeclarativeBase, relationship
-from sqlalchemy import Column, Integer, String, Boolean
-from sqlalchemy.orm import DeclarativeBase, Session
 
 
 # Создаем базовый класс для моделей
@@ -19,10 +17,12 @@ class Books(Base):
     title = Column(String(length=255), nullable=False, unique=False)
     publication = Column(String(length=50), nullable=False, unique=False)
     publication_date = Column(String(length=50), nullable=False, unique=False)
-    number_of_copies = Column(Integer, nullable=False, unique=False)
-    url_img = Column(String)
+    # number_of_copies = Column(Integer, nullable=False, unique=False)
+    cover_image = Column(String)
     # floor, row, rack, shelf
     book_location = Column(String(length=8), nullable=False)
+    other_attribute = Column(String(length=120))
+    price = Column(Float, nullable=False)
 
 
 class BooksAuthors(Base):
@@ -67,12 +67,47 @@ class Readers(Base):
     reader_name = Column(String(length=70), nullable=False, unique=False)
     year_birth = Column(Integer, nullable=False, unique=False)
     reader_address = Column(String(length=120), nullable=False, unique=False)
-    is_deleted = Column(Boolean, nullable=False,
-                        default=False, server_default=text('False'))
-    date_deleted = Column(DateTime, nullable=True)
+    email = Column(String(length=80), nullable=False, unique=False)
 
 
-# ############################## #
+class BorrowedBooks(Base):
+    __tablename__ = "borrowed_books"
+
+    id = Column(Integer, primary_key=True, autoincrement=True,
+                nullable=False, index=True)
+    book_id = Column(Integer, ForeignKey('books.id'), nullable=False)
+    reader_id = Column(Integer, ForeignKey('readers.id'), nullable=False)
+    date_borrowed = Column(DateTime, nullable=False)
+    date_return = Column(DateTime, nullable=True)
+    date_returned = Column(DateTime, nullable=True)
+    is_returned = Column(Boolean, nullable=False,
+                         default=False, server_default=text('False'))
+    # Library, Home
+    location = Column(String(7), nullable=False)
+
+
+class Orders(Base):
+    __tablename__ = 'orders'
+
+    id = Column(Integer, primary_key=True)
+    order_date = Column(DateTime, nullable=False)
+    status = Column(String, nullable=False)
+    order_items = relationship("OrderItems")
+
+
+class OrderItems(Base):
+    __tablename__ = 'order_items'
+
+    id = Column(Integer, primary_key=True)
+    order_id = Column(Integer, ForeignKey('orders.id'), nullable=False)
+    new_book_id = Column(Integer, ForeignKey('books.id'), nullable=True)
+    new_book_title = Column(String, nullable=False)
+    new_book_author = Column(String, nullable=False)
+    new_book_price = Column(Float, nullable=False)
+    quantity = Column(Integer, nullable=False)
+
+
+# ########################################################################### #
 class Users(Base):
     __tablename__ = "users"
 
