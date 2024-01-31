@@ -1,7 +1,7 @@
 from flask import jsonify, Blueprint, request
 import repository
 from connection import Session
-from models import Readers, Books, Loans
+# from models import Readers, Books, Loans
 
 app = Blueprint('routes', __name__)
 
