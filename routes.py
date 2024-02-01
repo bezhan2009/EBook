@@ -15,16 +15,6 @@ def index():
     return jsonify({"status": "server is up and running..."}), 200
 
 
-# Удалить жанр книги
-@app.route("/books/<book_id>/genres/<genre_id>", methods=["DELETE"])
-def remove_genre_from_existing_book(book_id, genre_id):
-    book = repository.get_book(book_id)
-    if not book:
-        return jsonify(error="Book not found"), 404
-    repository.remove_genre_from_book(book, genre_id)
-    return jsonify(message="Genre removed from book"), 200
-
-
 # Создание и редактирование читателей
 @app.route("/readers", methods=["POST"])
 def create_or_update_reader():
@@ -202,6 +192,17 @@ def add_genre_to_existing_book(book_id, genre_id):
         return jsonify(error="Genre not found"), 404
     repository.add_genre_to_book(book_id, genre_id)
     return jsonify(message="Genre added to book"), 200
+
+
+# Удалить жанр книги
+@app.route("/books/<book_id>/genres/<genre_id>", methods=["DELETE"])
+def delete_genre_from_book(book_id, genre_id):
+    print(book_id, genre_id)
+    result = repository.remove_genre_from_book(book_id, genre_id)
+    if result:
+        return jsonify(message="Genre removed from book"), 200
+    else:
+        return jsonify(error="Genre not found for the given book"), 404
 
 
 # === УПРАВЛЕНИЕ ЧИТАТЕЛЯМИ ===
