@@ -2,10 +2,39 @@ from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 from connection import engine
-from models import Books, Authors, Genres, Readers, BorrowedBooks, BooksGenres, BooksAuthors
+from models import Books, Authors, Genres, Readers, BorrowedBooks
 from datetime import datetime
 
+
 Session = sessionmaker(bind=engine)
+
+
+# Добавить автора для книги
+def add_author_to_book(_book, _author_id):
+    with Session(autoflush=False, bind=engine) as db:
+        author = db.query(Authors).get(_author_id)
+        if author:
+            _book.authors.append(author)
+            db.commit()
+
+
+# Удалить автора для книги
+def remove_author_from_book(_book, _author_id):
+    with Session(autoflush=False, bind=engine) as db:
+        author = db.query(Authors).get(_author_id)
+        if author in _book.authors:
+            _book.authors.remove(author)
+            db.commit()
+
+
+# Добавить жанр книги
+def add_genre_to_book(_book, _genre_id):
+    with Session(autoflush=False, bind=engine) as db:
+        genre = db.query(Genres).get(_genre_id)
+        if genre:
+            _book.genres.append(genre)
+            db.commit()
+>>>>>>> b5f8bfefdb1ede3a4f012118a56e07d0f675cb97
 
 
 # Удалить жанр книги
@@ -126,7 +155,11 @@ def update_book(_book, book_id, _updated_data):
 
 # Удаление книги
 def delete_book(_book_id):
+<<<<<<< HEAD
     with Session(autoflush=False, bind=engine) as db:
+=======
+    with Session(autoflush=False) as db:
+>>>>>>> b5f8bfefdb1ede3a4f012118a56e07d0f675cb97
         book_to_delete = db.query(Books).filter_by(id=_book_id).first()
         if book_to_delete:
             db.delete(book_to_delete)
@@ -136,6 +169,7 @@ def delete_book(_book_id):
             return False
 
 
+<<<<<<< HEAD
 # Поиск автора по id
 def get_author_found(author_id):
     with Session(autoflush=False, bind=engine) as db:
@@ -174,6 +208,8 @@ def remove_author_from_book(_book_id, _author_id):
             return False
 
 
+=======
+>>>>>>> b5f8bfefdb1ede3a4f012118a56e07d0f675cb97
 # === УПРАВЛЕНИЕ АВТОРАМИ ===
 
 # Создать автора
@@ -202,6 +238,7 @@ def create_author(author_data):
 # (эта функция без роута, т.к. она нужна только
 # для проверки именни автора для функции create_author)
 def get_author_by_name(author_name):
+<<<<<<< HEAD
     with Session(autoflush=False, bind=engine) as db:
         return db.query(Authors).filter(Authors.author_name == author_name).first()
 
@@ -223,6 +260,15 @@ def get_author(author_id):
 # Получение списка всех авторов
 def get_all_authors():
     with Session(autoflush=False, bind=engine) as db:
+=======
+    with Session(bind=engine) as db:
+        return db.query(Authors).filter(Authors.author_name == author_name).first()
+
+
+# Получение списка всех авторов
+def get_all_authors():
+    with Session(bind=engine) as db:
+>>>>>>> b5f8bfefdb1ede3a4f012118a56e07d0f675cb97
         authors = db.query(Authors).all()
         author_list = []
         for author in authors:
@@ -235,6 +281,7 @@ def get_all_authors():
         return author_list
 
 
+<<<<<<< HEAD
 # Изменение автора
 def update_author(author_id, updated_data):
     with Session(autoflush=False, bind=engine) as db:
@@ -252,6 +299,11 @@ def update_author(author_id, updated_data):
 # Удаление автора
 def delete_author(author_id):
     with Session(autoflush=False, bind=engine) as db:
+=======
+# Удаление автора
+def delete_author(author_id):
+    with Session(bind=engine) as db:
+>>>>>>> b5f8bfefdb1ede3a4f012118a56e07d0f675cb97
         author = db.query(Authors).filter(Authors.id == author_id).first()
         if author:
             db.delete(author)
@@ -261,6 +313,7 @@ def delete_author(author_id):
             return False
 
 
+<<<<<<< HEAD
 # === УПРАВЛЕНИЕ ЖАНРАМИ ===
 
 # Создать жанр
@@ -320,6 +373,8 @@ def add_genre_to_book(_book_id, _genre_id):
             return False
 
 
+=======
+>>>>>>> b5f8bfefdb1ede3a4f012118a56e07d0f675cb97
 # === УПРАВЛЕНИЕ ЧИТАТЕЛЯМИ ===
 
 # Поиск активностей конкретного читателя
@@ -349,4 +404,8 @@ def get_reader_activity(_reader_id):
 # Показать читателей
 def get_reader(reader_id: int):
     with Session(autoflush=False, bind=engine) as db:
+<<<<<<< HEAD
         return db.query(Readers).get(reader_id)
+=======
+        return db.query(Readers).get(reader_id)
+>>>>>>> b5f8bfefdb1ede3a4f012118a56e07d0f675cb97
