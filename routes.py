@@ -6,67 +6,13 @@ from sqlalchemy.orm import sessionmaker
 
 app = Blueprint('routes', __name__)
 
-Session = sessionmaker(bind=engine)
+Session = sessionmaker(autoflush=False, bind=engine)
 
 
 # Поднятие сервера
 @app.route('/', methods=["GET"])
 def index():
     return jsonify({"status": "server is up and running..."}), 200
-
-
-# Удалить автора для книги
-@app.route("/books/<book_id>/authors/<author_id>", methods=["DELETE"])
-def remove_author_from_existing_book(book_id, author_id):
-    book = repository.get_book(book_id)
-    if not book:
-        return jsonify(error="Book not found"), 404
-    repository.remove_author_from_book(book, author_id)
-    return jsonify(message="Author removed from book"), 200
-
-
-# Удалить жанр книги
-
-
-@app.route("/books/<book_id>/genres/<genre_id>", methods=["DELETE"])
-def remove_genre_from_existing_book(book_id, genre_id):
-    book = repository.get_book(book_id)
-    if not book:
-        return jsonify(error="Book not found"), 404
-    repository.remove_genre_from_book(book, genre_id)
-    return jsonify(message="Genre removed from book"), 200
-
-
-# Создание и редактирование читателей
-@app.route("/readers", methods=["POST"])
-def create_or_update_reader():
-    '''Создание или редактирование данных о читателях'''
-    reader_data = request.json
-    reader_id = reader_data.get("id")
-    with Session(autoflush=False, bind=engine) as db:
-        if reader_id:
-            # Редактирование существующего читателя
-            reader = db.query(Readers).get(reader_id)
-            if not reader:
-                return jsonify(error="Reader not found"), 404
-            for key, value in reader_data.items():
-                setattr(reader, key, value)
-        else:
-            # Создание нового читателя
-            reader = Readers(**reader_data)
-            db.add(reader)
-        db.commit()
-        return jsonify(reader), 200
-
-
-# Просмотр информации о конкретном читателе
-@app.route("/readers/<reader_id>", methods=["GET"])
-def get_single_reader(reader_id):
-    with Session(autoflush=False, bind=engine) as db:
-        reader = db.query(Readers).get(reader_id)
-        if not reader:
-            return jsonify(error="Reader not found"), 404
-        return jsonify(reader), 200
 
 
 # ======================================= РАБОТАЕТ ==================================
@@ -122,6 +68,30 @@ def delete_existing_book(book_id):
         return jsonify(error="The book was not deleted because the id is not in the database"), 404
 
 
+# Добавить автора для книги
+@app.route("/books/<int:book_id>/authors/<int:author_id>", methods=["POST"])
+def add_author_to_existing_book(book_id, author_id):
+    book = repository.get_book_found(book_id)
+    if not book:
+        return jsonify(error="Книга не найдена"), 404
+    author = repository.get_author_found(author_id)
+    if not author:
+        return jsonify(error="Автор не найден"), 404
+    repository.add_author_to_book(book_id, author_id)
+    return jsonify(message="Автор добавлен к книге"), 200
+
+
+# Удалить автора для книги
+@app.route("/books/<book_id>/authors/<author_id>", methods=["DELETE"])
+def delete_author_from_book(book_id, author_id):
+    print(book_id, author_id)
+    result = repository.remove_author_from_book(book_id, author_id)
+    if result:
+        return jsonify(message="Author removed from book"), 200
+    else:
+        return jsonify(error="Author not found for the given book"), 404
+
+
 # === УПРАВЛЕНИЕ АВТОРАМИ ===
 
 # Создать автора
@@ -168,28 +138,18 @@ def delete_author_by_id(author_id):
     else:
         return jsonify({'message': 'Автор не найден'}), 404
 
-# Добавить автора для книги
-
-
-@app.route("/books/<book_id>/authors/<author_id>", methods=["POST"])
-def add_author_to_existing_book(book_id, author_id):
-    book = repository.get_book_found(book_id)
-    if not book:
-        return jsonify(error="Book not found"), 404
-    author = repository.get_author_found(author_id)
-    if not author:
-        return jsonify(error="Author not found"), 404
-
-    repository.add_author_to_book(book_id, author_id)
-
-    return jsonify(message="Author added to book"), 200
-
 
 # === УПРАВЛЕНИЕ ЖАНРАМИ ===
 
+# Создать новый жанр
+@app.route("/genres", methods=["POST"])
+def create_new_genre():
+    new_genre_data = request.get_json()
+    new_genre = repository.create_genre(new_genre_data)
+    return jsonify(new_genre), 201
+
+
 # Добавить жанр книги
-
-
 @app.route("/books/<book_id>/genres/<genre_id>", methods=["POST"])
 def add_genre_to_existing_book(book_id, genre_id):
     book = repository.get_book_found(book_id)
@@ -198,24 +158,60 @@ def add_genre_to_existing_book(book_id, genre_id):
     genre = repository.get_genre_found(genre_id)
     if not genre:
         return jsonify(error="Genre not found"), 404
-
     repository.add_genre_to_book(book_id, genre_id)
-
     return jsonify(message="Genre added to book"), 200
+
+
+# Удалить жанр книги
+@app.route("/books/<book_id>/genres/<genre_id>", methods=["DELETE"])
+def delete_genre_from_book(book_id, genre_id):
+    print(book_id, genre_id)
+    result = repository.remove_genre_from_book(book_id, genre_id)
+    if result:
+        return jsonify(message="Genre removed from book"), 200
+    else:
+        return jsonify(error="Genre not found for the given book"), 404
 
 
 # === УПРАВЛЕНИЕ ЧИТАТЕЛЯМИ ===
 
-# Поиск активностей конкретного читателя
-@app.route("/readers/<reader_id>/activity", methods=["GET"])
-def get_reader_activity_route(reader_id):
-    activity, status_code = repository.get_reader_activity(reader_id)
-    if activity is None:
-        return jsonify(error="Reader not found"), status_code
-    return jsonify(activity), status_code
+# Создать читателя
+@app.route("/readers", methods=["POST"])
+def create_new_reader():
+    reader_data = request.json
+    reader = repository.create_reader(reader_data)
+    if reader:
+        return jsonify(reader), 200
+    else:
+        return jsonify(error="Failed to create reader"), 500
 
 
-# Показать читателей
+# Удалить читателя по id
+@app.route("/readers/<int:reader_id>", methods=["DELETE"])
+def delete_reader(reader_id):
+    result = repository.delete_reader_by_id(reader_id)
+    if "error" in result:
+        return jsonify(result), 404
+    else:
+        return jsonify(result), 200
+
+
+# Поиск читателя по id
+@app.route("/readers/<int:reader_id>", methods=["GET"])
+def get_single_reader_info(reader_id):
+    reader = repository.get_single_reader(reader_id)
+    if not reader:
+        return jsonify(error="Читатель не найден"), 404
+    return jsonify({
+        "id": reader.id,
+        "reader_name": reader.reader_name,
+        "year_birth": reader.year_birth,
+        "reader_address": reader.reader_address,
+        "email": reader.email
+    }), 200
+
+
+# Показать всех читателей
 @app.route("/readers", methods=["GET"])
 def get_all_readers():
     '''Просмотр списка читателей'''
@@ -232,3 +228,12 @@ def get_all_readers():
             }
             serialized_readers.append(serialized_reader)
         return make_response(jsonify(serialized_readers), 200)
+
+
+# Поиск активностей конкретного читателя
+@app.route("/readers/<reader_id>/activity", methods=["GET"])
+def get_reader_activity_route(reader_id):
+    activity, status_code = repository.get_reader_activity(reader_id)
+    if activity is None:
+        return jsonify(error="Reader not found"), status_code
+    return jsonify(activity), status_code

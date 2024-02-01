@@ -5,64 +5,12 @@ from connection import engine
 from models import Books, Authors, Genres, Readers, BorrowedBooks, BooksGenres, BooksAuthors
 from datetime import datetime
 
-
-Session = sessionmaker(bind=engine)
-
-
-# Удалить автора для книги
-def remove_author_from_book(_book, _author_id):
-    with Session(autoflush=False, bind=engine) as db:
-        author = db.query(Authors).get(_author_id)
-        if author in _book.authors:
-            _book.authors.remove(author)
-            db.commit()
-
-
-# Удалить жанр книги
-def remove_genre_from_book(_book, _genre_id):
-    with Session(autoflush=False, bind=engine) as db:
-        genre = db.query(Genres).get(_genre_id)
-        if genre in _book.genres:
-            _book.genres.remove(genre)
-            db.commit()
-
-
-# Создать читателя
-def create_reader(reader_data: dict):
-    with Session(autoflush=False, bind=engine) as db:
-        reader = Readers(**reader_data)
-        db.add(reader)
-        db.commit()
-        db.refresh(reader)
-        return reader
-
-
-# Измененить читателя
-def update_reader(reader: Readers, updated_data: dict):
-    with Session(autoflush=False, bind=engine) as db:
-        for key, value in updated_data.items():
-            setattr(reader, key, value)
-        db.commit()
-        return reader
-
-
-# Удалить читателя
-def delete_reader(reader: Readers):
-    with Session(autoflush=False, bind=engine) as db:
-        db.delete(reader)
-        db.commit()
+Session = sessionmaker(autoflush=False, bind=engine)
 
 
 # ======================================= РАБОТАЕТ ==================================
 
 # === УПРАВЛЕНИЕ КНИГАМИ ===
-
-# Поиск книги по id
-def get_book_found(_book_id):
-    with Session(autoflush=False, bind=engine) as db:
-        book = db.query(Books).get(_book_id)
-        return book
-
 
 # Создание новой книги
 def create_book(_book_data):
@@ -147,6 +95,44 @@ def delete_book(_book_id):
         book_to_delete = db.query(Books).filter_by(id=_book_id).first()
         if book_to_delete:
             db.delete(book_to_delete)
+            db.commit()
+            return True
+        else:
+            return False
+
+
+# Поиск автора по id
+def get_author_found(author_id):
+    with Session(autoflush=False, bind=engine) as db:
+        author = db.query(Authors).get(author_id)
+        if author:
+            return author.id
+        else:
+            return None
+
+
+# Добавить автора для книги
+def add_author_to_book(_book_id, _author_id):
+    with Session(autoflush=False, bind=engine) as db:
+        book = db.query(Books).get(_book_id)
+        author = db.query(Authors).get(_author_id)
+        if book and author:
+            book_author = BooksAuthors(book_id=_book_id, author_id=_author_id)
+            db.add(book_author)
+            db.commit()
+            return True
+        else:
+            return False
+
+
+# Удалить автора для книги
+def remove_author_from_book(_book_id, _author_id):
+    with Session(autoflush=False, bind=engine) as db:
+        book_author = db.query(BooksAuthors).filter_by(
+            book_id=_book_id, author_id=_author_id).first()
+        print(book_author)
+        if book_author:
+            db.delete(book_author)
             db.commit()
             return True
         else:
@@ -239,44 +225,52 @@ def delete_author(author_id):
         else:
             return False
 
-# Поиск автора по id
-
-
-def get_author_found(_author_id):
-    with Session(autoflush=False, bind=engine) as db:
-        author = db.query(Authors).get(_author_id)
-        return author
-
-# Добавить автора для книги
-
-
-def add_author_to_book(_book_id, _author_id):
-    with Session(autoflush=False, bind=engine) as db:
-        book = db.query(Books).get(_book_id)
-        author = db.query(Authors).get(_author_id)
-        if book and author:
-            book_author = BooksAuthors(book_id=_book_id, author_id=_author_id)
-            print(book_author)
-            db.add(book_author)
-            db.commit()
-            return True
-        else:
-            return False
-
 
 # === УПРАВЛЕНИЕ ЖАНРАМИ ===
 
+# Создать жанр
+def create_genre(genre_data):
+    existing_genre = get_genre_by_title(genre_data['title_genre'])
+    if existing_genre:
+        return {'message': 'Жанр с таким названием уже есть'}
+    new_genre = Genres(title_genre=genre_data['title_genre'])
+    with Session(autoflush=False, bind=engine) as db:
+        try:
+            db.add(new_genre)
+            db.commit()
+            db.refresh(new_genre)
+            return {
+                'id': new_genre.id,
+                'title_genre': new_genre.title_genre
+            }
+        except IntegrityError:
+            db.rollback()
+            return {'message': 'Не удалось создать жанр из-за нарушения ограничений базы данных'}
+
+
+# Получение жанра по названию
+# (эта функция без роута, т.к. она нужна только
+# для проверки именни автора для функции create_genre)
+def get_genre_by_title(title_genre):
+    with Session(autoflush=False, bind=engine) as db:
+        return db.query(Genres).filter(Genres.title_genre == title_genre).first()
+
+
+# Поиск книги по id
+def get_book_found(_book_id):
+    with Session(autoflush=False, bind=engine) as db:
+        book = db.query(Books).get(_book_id)
+        return book
+
+
 # Поиск жанра по id
-
-
 def get_genre_found(_genre_id):
     with Session(autoflush=False, bind=engine) as db:
         genre = db.query(Genres).get(_genre_id)
         return genre
 
+
 # Добавить жанр книги
-
-
 def add_genre_to_book(_book_id, _genre_id):
     with Session(autoflush=False, bind=engine) as db:
         book = db.query(Books).get(_book_id)
@@ -291,7 +285,58 @@ def add_genre_to_book(_book_id, _genre_id):
             return False
 
 
+# Удалить жанр книги
+def remove_genre_from_book(_book_id, _genre_id):
+    with Session(autoflush=False, bind=engine) as db:
+        book_genre = db.query(BooksGenres).filter_by(
+            book_id=_book_id, genre_id=_genre_id).first()
+        print(book_genre)
+        if book_genre:
+            db.delete(book_genre)
+            db.commit()
+            return True
+        else:
+            return False
+
+
 # === УПРАВЛЕНИЕ ЧИТАТЕЛЯМИ ===
+
+# Создать читателя
+def create_reader(_reader_data):
+    with Session(autoflush=False, bind=engine) as db:
+        reader = Readers(**_reader_data)
+        db.add(reader)
+        db.commit()
+        if reader:
+            return _reader_data
+        else:
+            return False
+
+
+# Удалить читателя по id
+def delete_reader_by_id(reader_id):
+    with Session(autoflush=False, bind=engine) as db:
+        reader = db.query(Readers).filter_by(id=reader_id).first()
+        if reader:
+            db.delete(reader)
+            db.commit()
+            return {"message": "Читатель успешно удален"}
+        else:
+            return {"error": "Читатель не найден"}
+
+
+# Поиск читателя по id
+def get_single_reader(_reader_id):
+    with Session(autoflush=False, bind=engine) as db:
+        reader = db.query(Readers).get(_reader_id)
+        return reader
+
+
+# Показать всех читателей
+def get_reader(reader_id: int):
+    with Session(autoflush=False, bind=engine) as db:
+        return db.query(Readers).get(reader_id)
+
 
 # Поиск активностей конкретного читателя
 def get_reader_activity(_reader_id):
@@ -315,9 +360,3 @@ def get_reader_activity(_reader_id):
                 "is_returned": borrowed_book.is_returned
             })
         return activity, 200
-
-
-# Показать читателей
-def get_reader(reader_id: int):
-    with Session(autoflush=False, bind=engine) as db:
-        return db.query(Readers).get(reader_id)
