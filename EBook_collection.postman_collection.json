@@ -50,29 +50,6 @@
 			"response": []
 		},
 		{
-			"name": "get_orders",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://127.0.0.1:7000/orders/1",
-					"protocol": "http",
-					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
-					],
-					"port": "7000",
-					"path": [
-						"orders",
-						"1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "get_book_by_id",
 			"request": {
 				"method": "GET",
@@ -400,6 +377,40 @@
 			"response": []
 		},
 		{
+			"name": "delete_genre_from_book",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:7000/books/3/genres/1",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "7000",
+					"path": [
+						"books",
+						"3",
+						"genres",
+						"1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
 			"name": "add_author_to_book",
 			"request": {
 				"method": "POST",
@@ -434,7 +445,7 @@
 			"response": []
 		},
 		{
-			"name": "delete_auyhor_from_book",
+			"name": "delete_author_from_book",
 			"request": {
 				"method": "DELETE",
 				"header": [],
@@ -452,40 +463,6 @@
 						"books",
 						"3",
 						"authors",
-						"1"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "delete_genre_from_book",
-			"request": {
-				"method": "DELETE",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "http://127.0.0.1:7000/books/3/genres/1",
-					"protocol": "http",
-					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
-					],
-					"port": "7000",
-					"path": [
-						"books",
-						"3",
-						"genres",
 						"1"
 					]
 				}
@@ -586,6 +563,37 @@
 					"path": [
 						"readers",
 						"10"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create_new_order",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"book_ids\": [19, 20, 21]\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:7000/orders",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "7000",
+					"path": [
+						"orders"
 					]
 				}
 			},

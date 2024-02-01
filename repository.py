@@ -362,7 +362,7 @@ def get_reader_activity(_reader_id):
         return activity, 200
 
 
-# ---------------------------------------------------------------------------
+# === УПРАВЛЕНИЕ ЗАКАЗАМИ ===
 
 # Регистрация нового заказа на книги
 def create_order(_book_ids):
@@ -371,14 +371,12 @@ def create_order(_book_ids):
         print(order)
         db.add(order)
         db.commit()
-
         for book_id in _book_ids:
             book = db.query(Books).get(book_id)
             if book:
                 order_item = OrderItems(
                     order_id=order.id, new_book_id=book_id, new_book_price=book.price, quantity=1)
                 db.add(order_item)
-
         db.commit()
 
 

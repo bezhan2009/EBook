@@ -239,20 +239,19 @@ def get_reader_activity_route(reader_id):
     return jsonify(activity), status_code
 
 
-# ---------------------------------------------------------------------------
+# === УПРАВЛЕНИЕ ЗАКАЗАМИ ===
 
 # Регистрация нового заказа на книги
 @app.route('/orders', methods=['POST'])
 def create_order_route():
     book_ids = request.json.get('book_ids')
-    print(book_ids)
-    print('*' * 1120)
+    # print(book_ids)
+    # print('*' * 1120)
     repository.create_order(book_ids)
     return 'Order created', 201
 
+
 # Обновление статуса заказа
-
-
 @app.route('/orders/<int:order_id>/status', methods=['PUT'])
 def update_order_status_route(order_id):
     status = request.json.get('status')
