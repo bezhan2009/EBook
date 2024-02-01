@@ -9,18 +9,9 @@ from datetime import datetime
 Session = sessionmaker(bind=engine)
 
 
-# Удалить жанр книги
-
-
-def remove_genre_from_book(_book, _genre_id):
-    with Session(autoflush=False, bind=engine) as db:
-        genre = db.query(Genres).get(_genre_id)
-        if genre in _book.genres:
-            _book.genres.remove(genre)
-            db.commit()
-
-
 # Создать читателя
+
+
 def create_reader(reader_data: dict):
     with Session(autoflush=False, bind=engine) as db:
         reader = Readers(**reader_data)
@@ -275,6 +266,22 @@ def add_author_to_book(_book_id, _author_id):
 
 
 # === УПРАВЛЕНИЕ ЖАНРАМИ ===
+
+# Удалить жанр книги
+
+
+def remove_genre_from_book(_book_id, _genre_id):
+    with Session(autoflush=False, bind=engine) as db:
+        book_genre = db.query(BooksGenres).filter_by(
+            book_id=_book_id, genre_id=_genre_id).first()
+        print(book_genre)
+        if book_genre:
+            db.delete(book_genre)
+            db.commit()
+            return True
+        else:
+            return False
+
 
 # Поиск жанра по id
 
