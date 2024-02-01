@@ -1,6 +1,6 @@
 from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, joinedload
 from connection import engine
 from models import Books, Authors, Genres, Readers, BorrowedBooks, BooksGenres, BooksAuthors, Orders, OrderItems
 from datetime import datetime
@@ -392,9 +392,9 @@ def update_order_status(order_id, status):
 
 
 # Информация по конкретному заказу
-def get_order_details(_order_id):
+def get_order_details(order_id):
     with Session(autoflush=False, bind=engine) as db:
-        order = db.query(Orders).get(_order_id)
+        order = db.query(Orders).get(order_id)
         if order:
             order_details = {
                 'order_id': order.id,
@@ -403,7 +403,7 @@ def get_order_details(_order_id):
                 'items': []
             }
             for item in order.order_items:
-                book = item.book
+                book = db.query(Books).get(item.new_book_id)
                 item_details = {
                     'book_id': book.id,
                     'book_title': book.title,
