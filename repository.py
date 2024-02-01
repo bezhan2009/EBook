@@ -5,33 +5,7 @@ from connection import engine
 from models import Books, Authors, Genres, Readers, BorrowedBooks, BooksGenres, BooksAuthors
 from datetime import datetime
 
-Session = sessionmaker(bind=engine)
-
-
-# Создать читателя
-def create_reader(reader_data: dict):
-    with Session(autoflush=False, bind=engine) as db:
-        reader = Readers(**reader_data)
-        db.add(reader)
-        db.commit()
-        db.refresh(reader)
-        return reader
-
-
-# Измененить читателя
-def update_reader(reader: Readers, updated_data: dict):
-    with Session(autoflush=False, bind=engine) as db:
-        for key, value in updated_data.items():
-            setattr(reader, key, value)
-        db.commit()
-        return reader
-
-
-# Удалить читателя
-def delete_reader(reader: Readers):
-    with Session(autoflush=False, bind=engine) as db:
-        db.delete(reader)
-        db.commit()
+Session = sessionmaker(autoflush=False, bind=engine)
 
 
 # ======================================= РАБОТАЕТ ==================================
@@ -327,6 +301,43 @@ def remove_genre_from_book(_book_id, _genre_id):
 
 # === УПРАВЛЕНИЕ ЧИТАТЕЛЯМИ ===
 
+# Создать читателя
+def create_reader(_reader_data):
+    with Session(autoflush=False, bind=engine) as db:
+        reader = Readers(**_reader_data)
+        db.add(reader)
+        db.commit()
+        if reader:
+            return _reader_data
+        else:
+            return False
+
+
+# Удалить читателя по id
+def delete_reader_by_id(reader_id):
+    with Session(autoflush=False, bind=engine) as db:
+        reader = db.query(Readers).filter_by(id=reader_id).first()
+        if reader:
+            db.delete(reader)
+            db.commit()
+            return {"message": "Читатель успешно удален"}
+        else:
+            return {"error": "Читатель не найден"}
+
+
+# Поиск читателя по id
+def get_single_reader(_reader_id):
+    with Session(autoflush=False, bind=engine) as db:
+        reader = db.query(Readers).get(_reader_id)
+        return reader
+
+
+# Показать всех читателей
+def get_reader(reader_id: int):
+    with Session(autoflush=False, bind=engine) as db:
+        return db.query(Readers).get(reader_id)
+
+
 # Поиск активностей конкретного читателя
 def get_reader_activity(_reader_id):
     with Session(autoflush=False, bind=engine) as db:
@@ -349,9 +360,3 @@ def get_reader_activity(_reader_id):
                 "is_returned": borrowed_book.is_returned
             })
         return activity, 200
-
-
-# Показать читателей
-def get_reader(reader_id: int):
-    with Session(autoflush=False, bind=engine) as db:
-        return db.query(Readers).get(reader_id)
