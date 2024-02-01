@@ -389,3 +389,28 @@ def update_order_status(order_id, status):
             db.commit()
             return True
         return False
+
+
+# =================  НАДО ПРОВЕРИТЬ ==================
+# Отслеживание взятых книг и сроков возврата
+def get_order_details(_order_id):
+    with Session(autoflush=False, bind=engine) as db:
+        order = db.query(Orders).get(_order_id)
+        if order:
+            order_details = {
+                'order_id': order.id,
+                'order_date': order.order_date,
+                'status': order.status,
+                'items': []
+            }
+            for item in order.order_items:
+                book = item.book
+                item_details = {
+                    'book_id': book.id,
+                    'book_title': book.title,
+                    'book_price': item.new_book_price,
+                    'quantity': item.quantity
+                }
+                order_details['items'].append(item_details)
+            return order_details
+        return None
