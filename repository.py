@@ -257,7 +257,7 @@ def delete_author(author_id):
 def create_genre(genre_data):
     existing_genre = get_genre_by_title(genre_data['title_genre'])
     if existing_genre:
-        return {'message': 'Автор с таким именем уже есть'}
+        return {'message': 'Жанр с таким названием уже есть'}
     new_genre = Genres(title_genre=genre_data['title_genre'])
     with Session(autoflush=False, bind=engine) as db:
         try:
