@@ -17,13 +17,13 @@ def index():
 
 # Удалить автора для книги
 @app.route("/books/<book_id>/authors/<author_id>", methods=["DELETE"])
-def remove_author_from_existing_book(book_id, author_id):
-    book = repository.get_book(book_id)
-    if not book:
-        return jsonify(error="Book not found"), 404
-    repository.remove_author_from_book(book, author_id)
-    return jsonify(message="Author removed from book"), 200
-
+def delete_author_from_book(book_id, author_id):
+    print(book_id, author_id)
+    result = repository.remove_author_from_book(book_id, author_id)
+    if result:
+        return jsonify(message="Author removed from book"), 200
+    else:
+        return jsonify(error="Author not found for the given book"), 404
 
 # Удалить жанр книги
 
