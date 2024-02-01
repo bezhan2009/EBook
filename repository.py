@@ -253,7 +253,7 @@ def delete_author(author_id):
 
 # === УПРАВЛЕНИЕ ЖАНРАМИ ===
 
-# Создать автора
+# Создать жанр
 def create_genre(genre_data):
     existing_genre = get_genre_by_title(genre_data['title_genre'])
     if existing_genre:

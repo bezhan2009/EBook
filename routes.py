@@ -189,7 +189,7 @@ def delete_author_by_id(author_id):
 
 # === УПРАВЛЕНИЕ ЖАНРАМИ ===
 
-# Создать автора
+# Создать новый жанр
 @app.route("/genres", methods=["POST"])
 def create_new_genre():
     new_genre_data = request.get_json()
