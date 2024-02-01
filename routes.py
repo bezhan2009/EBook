@@ -15,37 +15,6 @@ def index():
     return jsonify({"status": "server is up and running..."}), 200
 
 
-# Добавить автора для книги
-@app.route("/books/<book_id>/authors/<author_id>", methods=["POST"])
-def add_author_to_existing_book(book_id, author_id):
-    book = repository.get_book(book_id)
-    if not book:
-        return jsonify(error="Book not found"), 404
-    repository.add_author_to_book(book, author_id)
-    return jsonify(message="Author added to book"), 200
-
-
-# Удалить автора для книги
-@app.route("/books/<book_id>/authors/<author_id>", methods=["DELETE"])
-def remove_author_from_existing_book(book_id, author_id):
-    book = repository.get_book(book_id)
-    if not book:
-        return jsonify(error="Book not found"), 404
-    repository.remove_author_from_book(book, author_id)
-    return jsonify(message="Author removed from book"), 200
-
-
-# Добавить жанр книги
-@app.route("/books/<book_id>/genres/<genre_id>", methods=["POST"])
-def add_genre_to_existing_book(book_id, genre_id):
-    book = repository.get_book(book_id)
-    if not book:
-        return jsonify(error="Book not found"), 404
-    repository.add_genre_to_book(book, genre_id)
-    return jsonify(message="Genre added to book"), 200
-
-
->>>>>>> b5f8bfefdb1ede3a4f012118a56e07d0f675cb97
 # Удалить жанр книги
 @app.route("/books/<book_id>/genres/<genre_id>", methods=["DELETE"])
 def remove_genre_from_existing_book(book_id, genre_id):
@@ -141,7 +110,6 @@ def delete_existing_book(book_id):
         return jsonify(error="The book was not deleted because the id is not in the database"), 404
 
 
-<<<<<<< HEAD
 # Добавить автора для книги
 @app.route("/books/<int:book_id>/authors/<int:author_id>", methods=["POST"])
 def add_author_to_existing_book(book_id, author_id):
@@ -166,8 +134,6 @@ def delete_author_from_book(book_id, author_id):
         return jsonify(error="Author not found for the given book"), 404
 
 
-=======
->>>>>>> b5f8bfefdb1ede3a4f012118a56e07d0f675cb97
 # === УПРАВЛЕНИЕ АВТОРАМИ ===
 
 # Создать автора
@@ -185,7 +151,6 @@ def get_all_authors():
     return jsonify(all_authors), 200
 
 
-<<<<<<< HEAD
 # Поиск автора по id
 @app.route("/authors/<int:author_id>", methods=["GET"])
 def get_single_author(author_id):
@@ -206,8 +171,6 @@ def update_existing_author(author_id):
     return jsonify(updated_author), 200
 
 
-=======
->>>>>>> b5f8bfefdb1ede3a4f012118a56e07d0f675cb97
 # Удаление автора
 @app.route("/authors/<int:author_id>", methods=["DELETE"])
 def delete_author_by_id(author_id):
@@ -218,7 +181,6 @@ def delete_author_by_id(author_id):
         return jsonify({'message': 'Автор не найден'}), 404
 
 
-<<<<<<< HEAD
 # === УПРАВЛЕНИЕ ЖАНРАМИ ===
 
 # Создать новый жанр
@@ -242,8 +204,6 @@ def add_genre_to_existing_book(book_id, genre_id):
     return jsonify(message="Genre added to book"), 200
 
 
-=======
->>>>>>> b5f8bfefdb1ede3a4f012118a56e07d0f675cb97
 # === УПРАВЛЕНИЕ ЧИТАТЕЛЯМИ ===
 
 # Поиск активностей конкретного читателя
@@ -271,8 +231,4 @@ def get_all_readers():
                 'email': reader.email
             }
             serialized_readers.append(serialized_reader)
-<<<<<<< HEAD
         return make_response(jsonify(serialized_readers), 200)
-=======
-        return make_response(jsonify(serialized_readers), 200)
->>>>>>> b5f8bfefdb1ede3a4f012118a56e07d0f675cb97
