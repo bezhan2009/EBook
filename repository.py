@@ -8,15 +8,6 @@ from datetime import datetime
 Session = sessionmaker(bind=engine)
 
 
-# Удалить автора для книги
-def remove_author_from_book(_book, _author_id):
-    with Session(autoflush=False, bind=engine) as db:
-        author = db.query(Authors).get(_author_id)
-        if author in _book.authors:
-            _book.authors.remove(author)
-            db.commit()
-
-
 # Удалить жанр книги
 def remove_genre_from_book(_book, _genre_id):
     with Session(autoflush=False, bind=engine) as db:
@@ -163,6 +154,20 @@ def add_author_to_book(_book_id, _author_id):
         if book and author:
             book_author = BooksAuthors(book_id=_book_id, author_id=_author_id)
             db.add(book_author)
+            db.commit()
+            return True
+        else:
+            return False
+
+
+# Удалить автора для книги
+def remove_author_from_book(_book_id, _author_id):
+    with Session(autoflush=False, bind=engine) as db:
+        book_author = db.query(BooksAuthors).filter_by(
+            book_id=_book_id, author_id=_author_id).first()
+        print(book_author)
+        if book_author:
+            db.delete(book_author)
             db.commit()
             return True
         else:
