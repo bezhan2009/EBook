@@ -510,6 +510,40 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "delete_genre_from_book",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:7000/books/3/genres/1",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "7000",
+					"path": [
+						"books",
+						"3",
+						"genres",
+						"1"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }
