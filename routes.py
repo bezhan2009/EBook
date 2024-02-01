@@ -1,9 +1,12 @@
-from flask import jsonify, Blueprint, request
+from flask import jsonify, Blueprint, request, make_response
 import repository
 from connection import engine
 from models import Readers, Books
+from sqlalchemy.orm import sessionmaker
 
 app = Blueprint('routes', __name__)
+
+Session = sessionmaker(bind=engine)
 
 
 @app.route('/', methods=["GET"])
