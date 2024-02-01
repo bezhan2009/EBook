@@ -15,21 +15,6 @@ def index():
     return jsonify({"status": "server is up and running..."}), 200
 
 
-# Добавить автора для книги
-@app.route("/books/<book_id>/authors/<author_id>", methods=["POST"])
-def add_author_to_existing_book(book_id, author_id):
-    book = repository.get_book_found(book_id)
-    if not book:
-        return jsonify(error="Book not found"), 404
-    author = repository.get_author_found(author_id)
-    if not author:
-        return jsonify(error="Author not found"), 404
-
-    repository.add_author_to_book(book_id, author_id)
-
-    return jsonify(message="Author added to book"), 200
-
-
 # Удалить автора для книги
 @app.route("/books/<book_id>/authors/<author_id>", methods=["DELETE"])
 def remove_author_from_existing_book(book_id, author_id):
@@ -38,22 +23,6 @@ def remove_author_from_existing_book(book_id, author_id):
         return jsonify(error="Book not found"), 404
     repository.remove_author_from_book(book, author_id)
     return jsonify(message="Author removed from book"), 200
-
-# Добавить жанр книги
-
-
-@app.route("/books/<book_id>/genres/<genre_id>", methods=["POST"])
-def add_genre_to_existing_book(book_id, genre_id):
-    book = repository.get_book_found(book_id)
-    if not book:
-        return jsonify(error="Book not found"), 404
-    genre = repository.get_genre_found(genre_id)
-    if not genre:
-        return jsonify(error="Genre not found"), 404
-
-    repository.add_genre_to_book(book_id, genre_id)
-
-    return jsonify(message="Genre added to book"), 200
 
 
 # Удалить жанр книги
@@ -199,8 +168,40 @@ def delete_author_by_id(author_id):
     else:
         return jsonify({'message': 'Автор не найден'}), 404
 
+# Добавить автора для книги
+
+
+@app.route("/books/<book_id>/authors/<author_id>", methods=["POST"])
+def add_author_to_existing_book(book_id, author_id):
+    book = repository.get_book_found(book_id)
+    if not book:
+        return jsonify(error="Book not found"), 404
+    author = repository.get_author_found(author_id)
+    if not author:
+        return jsonify(error="Author not found"), 404
+
+    repository.add_author_to_book(book_id, author_id)
+
+    return jsonify(message="Author added to book"), 200
+
 
 # === УПРАВЛЕНИЕ ЖАНРАМИ ===
+
+# Добавить жанр книги
+
+
+@app.route("/books/<book_id>/genres/<genre_id>", methods=["POST"])
+def add_genre_to_existing_book(book_id, genre_id):
+    book = repository.get_book_found(book_id)
+    if not book:
+        return jsonify(error="Book not found"), 404
+    genre = repository.get_genre_found(genre_id)
+    if not genre:
+        return jsonify(error="Genre not found"), 404
+
+    repository.add_genre_to_book(book_id, genre_id)
+
+    return jsonify(message="Genre added to book"), 200
 
 
 # === УПРАВЛЕНИЕ ЧИТАТЕЛЯМИ ===
