@@ -15,16 +15,6 @@ def index():
     return jsonify({"status": "server is up and running..."}), 200
 
 
-# Удалить автора для книги
-@app.route("/books/<book_id>/authors/<author_id>", methods=["DELETE"])
-def delete_author_from_book(book_id, author_id):
-    print(book_id, author_id)
-    result = repository.remove_author_from_book(book_id, author_id)
-    if result:
-        return jsonify(message="Author removed from book"), 200
-    else:
-        return jsonify(error="Author not found for the given book"), 404
-
 # Удалить жанр книги
 
 
@@ -123,6 +113,17 @@ def delete_existing_book(book_id):
 
 
 # === УПРАВЛЕНИЕ АВТОРАМИ ===
+
+# Удалить автора для книги
+@app.route("/books/<book_id>/authors/<author_id>", methods=["DELETE"])
+def delete_author_from_book(book_id, author_id):
+    print(book_id, author_id)
+    result = repository.remove_author_from_book(book_id, author_id)
+    if result:
+        return jsonify(message="Author removed from book"), 200
+    else:
+        return jsonify(error="Author not found for the given book"), 404
+
 
 # Создать автора
 @app.route("/authors", methods=["POST"])

@@ -8,38 +8,6 @@ from datetime import datetime
 
 Session = sessionmaker(bind=engine)
 
-# Удалить автора для книги
-
-
-def remove_author_from_book(_book_id, _author_id):
-    with Session(autoflush=False, bind=engine) as db:
-        book_author = db.query(BooksAuthors).filter_by(
-            book_id=_book_id, author_id=_author_id).first()
-        print(book_author)
-        if book_author:
-            db.delete(book_author)
-            db.commit()
-            return True
-        else:
-            return False
-
-
-# Добавить автора для книги
-
-
-def add_author_to_book(_book_id, _author_id):
-    with Session(autoflush=False, bind=engine) as db:
-        book = db.query(Books).get(_book_id)
-        author = db.query(Authors).get(_author_id)
-        if book and author:
-            book_author = BooksAuthors(book_id=_book_id, author_id=_author_id)
-            print(book_author)
-            db.add(book_author)
-            db.commit()
-            return True
-        else:
-            return False
-
 
 # Удалить жанр книги
 
@@ -180,7 +148,24 @@ def delete_book(_book_id):
 
 # === УПРАВЛЕНИЕ АВТОРАМИ ===
 
+# Удалить автора для книги
+
+
+def remove_author_from_book(_book_id, _author_id):
+    with Session(autoflush=False, bind=engine) as db:
+        book_author = db.query(BooksAuthors).filter_by(
+            book_id=_book_id, author_id=_author_id).first()
+        print(book_author)
+        if book_author:
+            db.delete(book_author)
+            db.commit()
+            return True
+        else:
+            return False
+
 # Создать автора
+
+
 def create_author(author_data):
     existing_author = get_author_by_name(author_data['author_name'])
     if existing_author:
