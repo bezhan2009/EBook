@@ -157,6 +157,26 @@ def get_all_authors():
     return jsonify(all_authors), 200
 
 
+# Поиск автора по id
+@app.route("/authors/<int:author_id>", methods=["GET"])
+def get_single_author(author_id):
+    author = repository.get_author(author_id)
+    if not author:
+        return jsonify(error="Автор не найден"), 404
+    else:
+        return jsonify(author), 200
+
+
+# Изменение автора
+@app.route("/authors/<int:author_id>", methods=["PUT"])
+def update_existing_author(author_id):
+    updated_data = request.get_json()
+    updated_author = repository.update_author(author_id, updated_data)
+    if not updated_author:
+        return jsonify(error="Автор не найден"), 404
+    return jsonify(updated_author), 200
+
+
 # Удаление автора
 @app.route("/authors/<int:author_id>", methods=["DELETE"])
 def delete_author_by_id(author_id):
@@ -165,6 +185,9 @@ def delete_author_by_id(author_id):
         return jsonify({'message': 'Автор успешно удален'}), 200
     else:
         return jsonify({'message': 'Автор не найден'}), 404
+
+
+# === УПРАВЛЕНИЕ ЖАНРАМИ ===
 
 
 # === УПРАВЛЕНИЕ ЧИТАТЕЛЯМИ ===

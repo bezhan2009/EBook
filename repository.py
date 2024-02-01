@@ -154,7 +154,7 @@ def update_book(_book, book_id, _updated_data):
 
 # Удаление книги
 def delete_book(_book_id):
-    with Session(autoflush=False) as db:
+    with Session(autoflush=False, bind=engine) as db:
         book_to_delete = db.query(Books).filter_by(id=_book_id).first()
         if book_to_delete:
             db.delete(book_to_delete)
@@ -192,13 +192,27 @@ def create_author(author_data):
 # (эта функция без роута, т.к. она нужна только
 # для проверки именни автора для функции create_author)
 def get_author_by_name(author_name):
-    with Session(bind=engine) as db:
+    with Session(autoflush=False, bind=engine) as db:
         return db.query(Authors).filter(Authors.author_name == author_name).first()
+
+
+# Поиск автора по id
+def get_author(author_id):
+    with Session(autoflush=False, bind=engine) as db:
+        author = db.query(Authors).filter(Authors.id == author_id).first()
+        if author:
+            return {
+                'id': author.id,
+                'author_name': author.author_name,
+                'description': author.description
+            }
+        else:
+            return None
 
 
 # Получение списка всех авторов
 def get_all_authors():
-    with Session(bind=engine) as db:
+    with Session(autoflush=False, bind=engine) as db:
         authors = db.query(Authors).all()
         author_list = []
         for author in authors:
@@ -211,9 +225,23 @@ def get_all_authors():
         return author_list
 
 
+# Изменение автора
+def update_author(author_id, updated_data):
+    with Session(autoflush=False, bind=engine) as db:
+        db.query(Authors).filter(Authors.id == author_id).update(updated_data)
+        db.commit()
+        updated_author = db.query(Authors).get(author_id)
+        serialized_author = {
+            'id': updated_author.id,
+            'author_name': updated_author.author_name,
+            'description': updated_author.description,
+        }
+        return serialized_author
+
+
 # Удаление автора
 def delete_author(author_id):
-    with Session(bind=engine) as db:
+    with Session(autoflush=False, bind=engine) as db:
         author = db.query(Authors).filter(Authors.id == author_id).first()
         if author:
             db.delete(author)
@@ -221,6 +249,9 @@ def delete_author(author_id):
             return True
         else:
             return False
+
+
+# === УПРАВЛЕНИЕ ЖАНРАМИ ===
 
 
 # === УПРАВЛЕНИЕ ЧИТАТЕЛЯМИ ===
