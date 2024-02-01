@@ -189,6 +189,13 @@ def delete_author_by_id(author_id):
 
 # === УПРАВЛЕНИЕ ЖАНРАМИ ===
 
+# Создать автора
+@app.route("/genres", methods=["POST"])
+def create_new_genre():
+    new_genre_data = request.get_json()
+    new_genre = repository.create_genre(new_genre_data)
+    return jsonify(new_genre), 201
+
 
 # === УПРАВЛЕНИЕ ЧИТАТЕЛЯМИ ===
 

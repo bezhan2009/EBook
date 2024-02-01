@@ -253,6 +253,33 @@ def delete_author(author_id):
 
 # === УПРАВЛЕНИЕ ЖАНРАМИ ===
 
+# Создать автора
+def create_genre(genre_data):
+    existing_genre = get_genre_by_title(genre_data['title_genre'])
+    if existing_genre:
+        return {'message': 'Автор с таким именем уже есть'}
+    new_genre = Genres(title_genre=genre_data['title_genre'])
+    with Session(autoflush=False, bind=engine) as db:
+        try:
+            db.add(new_genre)
+            db.commit()
+            db.refresh(new_genre)
+            return {
+                'id': new_genre.id,
+                'title_genre': new_genre.title_genre
+            }
+        except IntegrityError:
+            db.rollback()
+            return {'message': 'Не удалось создать жанр из-за нарушения ограничений базы данных'}
+
+
+# Получение жанра по названию
+# (эта функция без роута, т.к. она нужна только
+# для проверки именни автора для функции create_genre)
+def get_genre_by_title(title_genre):
+    with Session(autoflush=False, bind=engine) as db:
+        return db.query(Genres).filter(Genres.title_genre == title_genre).first()
+
 
 # === УПРАВЛЕНИЕ ЧИТАТЕЛЯМИ ===
 
