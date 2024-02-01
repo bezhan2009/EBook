@@ -2,7 +2,7 @@ from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 from connection import engine
-from models import Books, Authors, Genres, Readers, BorrowedBooks, BooksGenres, BooksAuthors
+from models import Books, Authors, Genres, Readers, BorrowedBooks, BooksGenres, BooksAuthors, Orders, OrderItems
 from datetime import datetime
 
 Session = sessionmaker(autoflush=False, bind=engine)
@@ -360,3 +360,34 @@ def get_reader_activity(_reader_id):
                 "is_returned": borrowed_book.is_returned
             })
         return activity, 200
+
+
+# ---------------------------------------------------------------------------
+
+# Регистрация нового заказа на книги
+def create_order(_book_ids):
+    with Session(autoflush=False, bind=engine) as db:
+        order = Orders(order_date=datetime.now(), status="Pending")
+        print(order)
+        db.add(order)
+        db.commit()
+
+        for book_id in _book_ids:
+            book = db.query(Books).get(book_id)
+            if book:
+                order_item = OrderItems(
+                    order_id=order.id, new_book_id=book_id, new_book_price=book.price, quantity=1)
+                db.add(order_item)
+
+        db.commit()
+
+
+# Обновление статуса заказа
+def update_order_status(order_id, status):
+    with Session(autoflush=False, bind=engine) as db:
+        order = db.query(Orders).get(order_id)
+        if order:
+            order.status = status
+            db.commit()
+            return True
+        return False
