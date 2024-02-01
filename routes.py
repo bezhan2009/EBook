@@ -261,3 +261,12 @@ def update_order_status_route(order_id):
     if repository.update_order_status(order_id, status):
         return 'Order status updated', 200
     return 'Order not found', 404
+
+
+# Информация по конкретному заказу
+@app.route('/orders/<int:order_id>', methods=['GET'])
+def get_order_details_route(order_id):
+    order_details = repository.get_order_details(order_id)
+    if order_details:
+        return jsonify(order_details), 200
+    return jsonify({'error': 'Order not found'}), 404
