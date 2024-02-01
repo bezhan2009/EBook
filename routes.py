@@ -245,8 +245,6 @@ def get_reader_activity_route(reader_id):
 @app.route('/orders', methods=['POST'])
 def create_order_route():
     book_ids = request.json.get('book_ids')
-    # print(book_ids)
-    # print('*' * 1120)
     repository.create_order(book_ids)
     return 'Order created', 201
 
@@ -263,8 +261,7 @@ def update_order_status_route(order_id):
     return 'Order not found', 404
 
 
-# ============= НАДО ПРОВЕРИТЬ =============
-# Отслеживание взятых книг и сроков возврата
+# Информация по конкретному заказу
 @app.route('/orders/<int:order_id>', methods=['GET'])
 def get_order_details_route(order_id):
     order_details = repository.get_order_details(order_id)

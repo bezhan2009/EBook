@@ -391,8 +391,7 @@ def update_order_status(order_id, status):
         return False
 
 
-# =================  НАДО ПРОВЕРИТЬ ==================
-# Отслеживание взятых книг и сроков возврата
+# Информация по конкретному заказу
 def get_order_details(_order_id):
     with Session(autoflush=False, bind=engine) as db:
         order = db.query(Orders).get(_order_id)

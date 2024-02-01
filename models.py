@@ -95,7 +95,8 @@ class Orders(Base):
     id = Column(Integer, primary_key=True)
     order_date = Column(DateTime, nullable=False)
     status = Column(String, nullable=False)
-    order_items = relationship("OrderItems", back_populates="order")
+    order_items = relationship("OrderItems")
+    staff_id = Column(Integer, ForeignKey('staff.id'))
 
 
 class OrderItems(Base):
