@@ -195,3 +195,4 @@ def get_all_readers():
             }
             serialized_readers.append(serialized_reader)
         return make_response(jsonify(serialized_readers), 200)
+
