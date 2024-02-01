@@ -101,7 +101,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"title\": \"Американская трагедия\",\r\n    \"publication\": \"ИСКРА\",\r\n    \"publication_date\": \"1980-01-01\",\r\n    \"cover_image\": \"\",\r\n    \"book_location\": \"01030405\",\r\n    \"description\": \"«Американская трагедия» — роман американского писателя Теодора Драйзера, опубликованный в 1925 году.\",\r\n    \"price\": 10.99,\r\n    \"available_copies\": 10\r\n}",
+					"raw": "{\r\n    \"title\": \"Великий Гэтсби\",\r\n    \"publication\": \"Лениздат\",\r\n    \"publication_date\": \"1983-01-01\",\r\n    \"cover_image\": \"\",\r\n    \"book_location\": \"01020704\",\r\n    \"description\": \"«Великий Гэтсби» — роман американского писателя Фрэнсиса Скотта Фицджеральда, опубликованный в 1925 году.\",\r\n    \"price\": 8.99,\r\n    \"available_copies\": 20\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -575,7 +575,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n  \"book_ids\": [19, 20, 21]\r\n}",
+					"raw": "{\r\n  \"book_ids\": [9, 2]\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -594,6 +594,62 @@
 					"port": "7000",
 					"path": [
 						"orders"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "update_order_status",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"status\": \"Completed\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:7000/orders/1/status",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "7000",
+					"path": [
+						"orders",
+						"1",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get_order_by_id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:7000/orders/1",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "7000",
+					"path": [
+						"orders",
+						"1"
 					]
 				}
 			},
