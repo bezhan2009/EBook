@@ -281,3 +281,45 @@ def get_staff_by_id(staff_id):
         return jsonify(error="staff not found"), 404
     else:
         return jsonify(staff), 200
+
+
+# Создание нового staff
+@app.route("/staff", methods=["POST"])
+def create_new_staff():
+    staff_data = request.json
+    staff = repository.add_staff(staff_data)
+    if staff:
+        return {"message": "Работник успешно добавлен"}, 201
+    else:
+        return {"error": "Ошибка, попробуйте заново"}, 404
+
+
+# Изменение роли staff
+@app.route("/staff/<int:staff_id>/role", methods=["PUT"])
+def update_role_staff(staff_id):
+    updated_data = request.json.get('role')
+    updated_staff = repository.update_staff_new_role(staff_id, updated_data)
+    if not updated_staff:
+        return jsonify(error="Автор не найден"), 404
+    return jsonify(message="Роль успешно обновлена"), 200
+
+
+# Изменение уровня доступа staff
+@app.route("/staff/<int:staff_id>/level", methods=["PUT"])
+def update_access_level_staff(staff_id):
+    # updated_data = request.json.get(staff_id)
+    updated_staff = repository.update_staff_new_access_level(staff_id)
+    if updated_staff:
+        return jsonify(message="Уровень доступа успешно обновлен"), 200
+    else:
+        return jsonify(error="Автор не найден"), 404
+
+
+# Удаление staff по id
+@app.route("/staff/<int:staff_id>", methods=["DELETE"])
+def delete_staff(staff_id):
+    result = repository.delete_staff(staff_id)
+    if "error" in result:
+        return jsonify(result), 404
+    else:
+        return jsonify(result), 200
