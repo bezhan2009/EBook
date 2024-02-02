@@ -654,8 +654,6 @@
 				}
 			},
 			"response": []
-<<<<<<< HEAD
-=======
 		},
 		{
 			"name": "add_new_staff",
@@ -854,7 +852,6 @@
 				}
 			},
 			"response": []
->>>>>>> ca63cba9fff57c87d6a94647aa93db4cc852de04
 		}
 	]
 }
