@@ -270,3 +270,6 @@ def get_order_details_route(order_id):
     if order_details:
         return jsonify(order_details), 200
     return jsonify({'error': 'Order not found'}), 404
+
+
+# === УПРАВЛЕНИЕ ПЕРСОНАЛОМ ===
