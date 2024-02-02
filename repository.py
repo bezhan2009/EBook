@@ -1,4 +1,4 @@
-from sqlalchemy import and_
+from sqlalchemy import and_, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 from connection import engine
@@ -381,17 +381,40 @@ def create_order(_book_ids):
 
 
 # Обновление статуса заказа
-def update_order_status(order_id, status):
+def update_order_status(_order_id, _status):
     with Session(autoflush=False, bind=engine) as db:
-        order = db.query(Orders).get(order_id)
+        order = db.query(Orders).get(_order_id)
         if order:
-            order.status = status
+            order.status = _status
             db.commit()
             return True
         return False
 
+# Обновляем количество книг в таблице books в случае "Completed"
+
+
+def update_book_quantity_and_price(_order_id):
+    with Session(autoflush=False, bind=engine) as db:
+        # Получаем записи из таблицы order_items для указанного заказа
+        order_items = db.query(OrderItems).filter_by(order_id=_order_id).all()
+
+        # Обновляем количество книг в таблице books на основе информации из order_items
+        for item in order_items:
+            book_id = item.new_book_id
+            new_book_price = item.new_book_price
+            quantity = item.quantity
+
+            # Выполняем SQL-запрос для обновления количества книг в таблице books
+            statement_for_update = update(Books).where(
+                Books.id == book_id).values(quantity=quantity, price=new_book_price)
+            db.execute(statement_for_update)
+
+        db.commit()
+        return True
 
 # Информация по конкретному заказу
+
+
 def get_order_details(order_id):
     with Session(autoflush=False, bind=engine) as db:
         order = db.query(Orders).get(order_id)

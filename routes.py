@@ -251,6 +251,17 @@ def create_order_route():
     return 'Order created', 201
 
 
+# # Обновление статуса заказа
+# @app.route('/orders/<int:order_id>/status', methods=['PUT'])
+# def update_order_status_route(order_id):
+#     status = request.json.get('status')
+#     if status not in ['Completed', 'Rejected']:
+#         return 'Invalid status', 400
+
+#     if repository.update_order_status(order_id, status):
+#         return 'Order status updated', 200
+#     return 'Order not found', 404
+
 # Обновление статуса заказа
 @app.route('/orders/<int:order_id>/status', methods=['PUT'])
 def update_order_status_route(order_id):
@@ -259,11 +270,31 @@ def update_order_status_route(order_id):
         return 'Invalid status', 400
 
     if repository.update_order_status(order_id, status):
+        if status == 'Completed':
+            repository.update_book_quantity_and_price(order_id)
         return 'Order status updated', 200
     return 'Order not found', 404
 
+# # Обновление статуса заказа
+# @app.route('/orders/<int:order_id>/status', methods=['PUT'])
+# def update_order_status_route(order_id):
+#     status = request.json.get('status')
+#     if status not in ['Completed', 'Rejected']:
+#         return 'Invalid status', 400
+
+#     if repository.update_order_status(order_id, status):
+#         if status == 'Completed':
+#             if update_book_quantities(order_id):
+#                 return 'Order status updated and book quantities updated', 200
+#             else:
+#                 return 'Order status updated, but failed to update book quantities', 500
+#         else:
+#             return 'Order status updated', 200
+#     return 'Order not found', 404
 
 # Информация по конкретному заказу
+
+
 @app.route('/orders/<int:order_id>', methods=['GET'])
 def get_order_details_route(order_id):
     order_details = repository.get_order_details(order_id)
