@@ -214,7 +214,6 @@ def get_single_reader_info(reader_id):
 # Показать всех читателей
 @app.route("/readers", methods=["GET"])
 def get_all_readers():
-    '''Просмотр списка читателей'''
     with Session(autoflush=False, bind=engine) as db:
         readers = db.query(Readers).all()
         serialized_readers = []
@@ -239,20 +238,17 @@ def get_reader_activity_route(reader_id):
     return jsonify(activity), status_code
 
 
-# ---------------------------------------------------------------------------
+# === УПРАВЛЕНИЕ ЗАКАЗАМИ ===
 
 # Регистрация нового заказа на книги
 @app.route('/orders', methods=['POST'])
 def create_order_route():
     book_ids = request.json.get('book_ids')
-    print(book_ids)
-    print('*' * 1120)
     repository.create_order(book_ids)
-    return 'Order created', 201
+    return 'Заказ создан', 201
+
 
 # Обновление статуса заказа
-
-
 @app.route('/orders/<int:order_id>/status', methods=['PUT'])
 def update_order_status_route(order_id):
     status = request.json.get('status')
@@ -260,15 +256,80 @@ def update_order_status_route(order_id):
         return 'Invalid status', 400
 
     if repository.update_order_status(order_id, status):
+        if status == 'Completed':
+            repository.update_book_quantity_and_price(order_id)
         return 'Order status updated', 200
     return 'Order not found', 404
 
-# Отслеживание взятых книг и сроков возврата
 
-
+# Информация по конкретному заказу
 @app.route('/orders/<int:order_id>', methods=['GET'])
 def get_order_details_route(order_id):
     order_details = repository.get_order_details(order_id)
     if order_details:
         return jsonify(order_details), 200
-    return 'Order not found', 404
+    return jsonify({'error': 'Заказ не найден'}), 404
+
+
+# === УПРАВЛЕНИЕ ПЕРСОНАЛОМ ===
+
+# Добавить нового работника
+@app.route("/staff", methods=["POST"])
+def create_new_staff():
+    staff_data = request.json
+    staff = repository.add_staff(staff_data)
+    if staff:
+        return {"message": "Работник успешно добавлен"}, 201
+    else:
+        return {"error": "Ошибка, попробуйте заново"}, 404
+
+
+# Поиск сотрудника по id
+@app.route("/staff/<int:staff_id>", methods=["GET"])
+def get_staff_by_id(staff_id):
+    staff = repository.get_staff(staff_id)
+    if not staff:
+        return jsonify(error="staff not found"), 404
+    else:
+        return jsonify(staff), 200
+
+
+# Просмотр всех сотрудников
+@app.route("/staff", methods=["GET"])
+def get_all_staff():
+    staff = repository.get_staff_all()
+    if not staff:
+        return jsonify(error="staff not found"), 404
+    else:
+        return jsonify(staff), 200
+
+
+# Обновить роль для сотрудника
+@app.route("/staff/<int:staff_id>/role", methods=["PUT"])
+def update_role_staff(staff_id):
+    updated_data = request.json.get('role')
+    updated_staff = repository.update_staff_new_role(staff_id, updated_data)
+    if not updated_staff:
+        return jsonify(error="Сотрудник не найден"), 404
+    return jsonify(message="Роль успешно обновлена"), 200
+
+
+# Обновить уровень допуска для сотрудника
+@app.route("/staff/<int:staff_id>/level", methods=["PUT"])
+def update_access_level_staff(staff_id):
+    # updated_data = request.json.get(staff_id)
+    updated_staff = repository.update_staff_new_access_level(staff_id)
+    if updated_staff:
+        return jsonify(message="Уровень доступа успешно обновлен"), 200
+    else:
+        return jsonify(error="Автор не найден"), 404
+
+
+# Удалить сотрудника (soft-delete)
+@app.route("/staff/<int:staff_id>", methods=["DELETE"])
+def delete_staff(staff_id):
+    result = repository.delete_staff(staff_id)
+    if "error" in result:
+        return jsonify(result), 404
+    else:
+        return jsonify(result), 200

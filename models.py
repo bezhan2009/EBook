@@ -95,8 +95,8 @@ class Orders(Base):
     id = Column(Integer, primary_key=True)
     order_date = Column(DateTime, nullable=False)
     status = Column(String, nullable=False)
+    order_items = relationship("OrderItems")
     staff_id = Column(Integer, ForeignKey('staff.id'))
-    order_items = relationship("OrderItems", back_populates="order")
 
 
 class OrderItems(Base):
@@ -120,6 +120,7 @@ class Staff(Base):
     name = Column(String(length=70), nullable=False)
     role = Column(String(length=32), nullable=False)
     access_level = Column(Integer, nullable=False)
+    is_deleted = Column(Boolean, nullable=False, default=False)
 
 
 Base.metadata.create_all(bind=engine)
