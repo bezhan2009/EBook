@@ -28,7 +28,7 @@ def create_new_book():
 
 
 # Получение всего списка книг
-@app.route("/bookies", methods=["GET"])
+@app.route("/books", methods=["GET"])
 def get_single_book_all():
     books = repository.get_book_all()
     if not books:
@@ -261,3 +261,23 @@ def update_order_status_route(order_id):
     if repository.update_order_status(order_id, status):
         return 'Order status updated', 200
     return 'Order not found', 404
+
+
+# Получение всего списка staff
+@app.route("/staff", methods=["GET"])
+def get_all_staff():
+    staff = repository.get_staff_all()
+    if not staff:
+        return jsonify(error="staff not found"), 404
+    else:
+        return jsonify(staff), 200
+
+
+# Поиск staff по id
+@app.route("/staff/<int:staff_id>", methods=["GET"])
+def get_staff_by_id(staff_id):
+    staff = repository.get_staff(staff_id)
+    if not staff:
+        return jsonify(error="staff not found"), 404
+    else:
+        return jsonify(staff), 200
