@@ -245,22 +245,9 @@ def get_reader_activity_route(reader_id):
 @app.route('/orders', methods=['POST'])
 def create_order_route():
     book_ids = request.json.get('book_ids')
-    # print(book_ids)
-    # print('*' * 1120)
     repository.create_order(book_ids)
     return 'Order created', 201
 
-
-# # Обновление статуса заказа
-# @app.route('/orders/<int:order_id>/status', methods=['PUT'])
-# def update_order_status_route(order_id):
-#     status = request.json.get('status')
-#     if status not in ['Completed', 'Rejected']:
-#         return 'Invalid status', 400
-
-#     if repository.update_order_status(order_id, status):
-#         return 'Order status updated', 200
-#     return 'Order not found', 404
 
 # Обновление статуса заказа
 @app.route('/orders/<int:order_id>/status', methods=['PUT'])
@@ -283,3 +270,8 @@ def get_order_details_route(order_id):
     if order_details:
         return jsonify(order_details), 200
     return jsonify({'error': 'Order not found'}), 404
+
+
+# === УПРАВЛЕНИЕ ПЕРСОНАЛОМ ===
+
+# Ждем роуты
