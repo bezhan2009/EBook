@@ -470,12 +470,42 @@ def add_staff(_staff_data):
             return False
 
 
-# # запрос для постмана
-# new_staff = {
-#   "name": "Marlon Brando",
-#   "role": "maker",
-#   "access_level": 2
-# }
+# Поиск сотрудника по id
+def get_staff(_id):
+    with Session(autoflush=False, bind=engine) as db:
+        staff = db.query(Staff).filter_by(id=_id).first()
+        if staff:
+            staff_by_id = {
+                'id': staff.id,
+                'name': staff.name,
+                'role': staff.role,
+                'access_level': staff.access_level,
+                'is_deleted': staff.is_deleted
+            }
+            return staff_by_id
+        else:
+            return False
+
+
+# Просмотр всех сотрудников
+def get_staff_all():
+    with Session(autoflush=False, bind=engine) as db:
+        staff_seek = db.query(Staff).all()
+        if staff_seek:
+            list_staff_data = []
+            for staff in staff_seek:
+                staff_data = {
+                    'id': staff.id,
+                    'name': staff.name,
+                    'role': staff.role,
+                    'access_level': staff.access_level,
+                    'is_deleted': staff.is_deleted
+                }
+                list_staff_data.append(staff_data)
+            return list_staff_data
+        else:
+            return None
+
 
 # Обновить роль для сотрудника
 def update_staff_new_role(_id, _new_role):
@@ -510,39 +540,3 @@ def delete_staff(_id):
         else:
             return {"error": "Работник не найден"}
 
-
-# Просмотр всех сотрудников
-def get_staff_all():
-    with Session(autoflush=False, bind=engine) as db:
-        staff_seek = db.query(Staff).all()
-        if staff_seek:
-            list_staff_data = []
-            for staff in staff_seek:
-                staff_data = {
-                    'id': staff.id,
-                    'name': staff.name,
-                    'role': staff.role,
-                    'access_level': staff.access_level,
-                    'is_deleted': staff.is_deleted
-                }
-                list_staff_data.append(staff_data)
-            return list_staff_data
-        else:
-            return None
-
-
-# Поиск сотрудника по id
-def get_staff(_id):
-    with Session(autoflush=False, bind=engine) as db:
-        staff = db.query(Staff).filter_by(id=_id).first()
-        if staff:
-            staff_by_id = {
-                'id': staff.id,
-                'name': staff.name,
-                'role': staff.role,
-                'access_level': staff.access_level,
-                'is_deleted': staff.is_deleted
-            }
-            return staff_by_id
-        else:
-            return False

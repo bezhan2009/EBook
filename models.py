@@ -117,7 +117,7 @@ class Staff(Base):
     name = Column(String(length=70), nullable=False)
     role = Column(String(length=32), nullable=False)
     access_level = Column(Integer, nullable=False)
-    is_deleted = Column(Boolean, nullable=False)
+    is_deleted = Column(Boolean, nullable=False, default=False)
 
 
 Base.metadata.create_all(bind=engine)
