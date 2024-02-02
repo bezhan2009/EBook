@@ -95,6 +95,7 @@ class Orders(Base):
     id = Column(Integer, primary_key=True)
     order_date = Column(DateTime, nullable=False)
     status = Column(String, nullable=False)
+    staff_id = Column(Integer, ForeignKey('staff.id'))
     order_items = relationship("OrderItems", back_populates="order")
 
 
@@ -107,6 +108,9 @@ class OrderItems(Base):
     new_book_price = Column(Float, nullable=False)
     quantity = Column(Integer, nullable=False)
     new_book = relationship("Books", foreign_keys=[new_book_id])
+    # Добавляем отношение
+    order = relationship("Orders", back_populates="order_items")
+    book = relationship("Books")  # Добавляем отношение
 
 
 class Staff(Base):

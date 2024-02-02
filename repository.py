@@ -2,7 +2,7 @@ from sqlalchemy import and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker
 from connection import engine
-from models import Books, Authors, Genres, Readers, BorrowedBooks, BooksGenres, BooksAuthors, Orders, OrderItems
+from models import Books, Authors, Genres, Readers, BorrowedBooks, BooksGenres, BooksAuthors, Orders, OrderItems, Staff
 from datetime import datetime
 
 Session = sessionmaker(autoflush=False, bind=engine)
@@ -383,11 +383,57 @@ def create_order(_book_ids):
 
 
 # Обновление статуса заказа
-def update_order_status(order_id, status):
+def update_order_status(_order_id, _status):
     with Session(autoflush=False, bind=engine) as db:
-        order = db.query(Orders).get(order_id)
+        order = db.query(Orders).get(_order_id)
         if order:
-            order.status = status
+            order.status = _status
             db.commit()
             return True
         return False
+
+# Отслеживание взятых книг и сроков возврата
+
+
+def get_order_details(_order_id):
+    with Session(autoflush=False, bind=engine) as db:
+        order = db.query(Orders).get(_order_id)
+        if order:
+            order_details = {
+                'order_id': order.id,
+                'order_date': order.order_date,
+                'status': order.status,
+                'items': []
+            }
+
+            for item in order.order_items:
+                book = item.book
+                item_details = {
+                    'book_id': book.id,
+                    'book_title': book.title,
+                    'book_price': item.new_book_price,
+                    'quantity': item.quantity
+                }
+                order_details['items'].append(item_details)
+
+            return order_details
+        return None
+
+
+# Создаем контекстный менеджер сессии
+with Session(autoflush=False, bind=engine) as db:
+    # Добавление нового сотрудника
+    new_staff = Staff(name="Имя сотрудника",
+                      role="Библиотекарь", access_level=1)
+    db.add(new_staff)
+    db.commit()
+    print("Новый сотрудник успешно добавлен!")
+
+    # Удаление сотрудника
+    staff_to_delete = db.query(Staff).filter_by(name="Имя сотрудника").first()
+    if staff_to_delete:
+        db.delete(staff_to_delete)
+        db.commit()
+        print("Сотрудник успешно удален!")
+    else:
+        print("Сотрудник не найден.")
