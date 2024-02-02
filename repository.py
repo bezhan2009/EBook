@@ -40,8 +40,32 @@ def get_book_all():
                     'book_location': book.book_location,
                     'description': book.description,
                     'price': book.price,
-                    'available_copies': book.available_copies
+                    'available_copies': book.available_copies,
+                    'authors': [],
+                    'genres': []
                 }
+
+                # Получение информации об авторах книги
+                authors = db.query(Authors).join(BooksAuthors).filter(
+                    BooksAuthors.book_id == book.id).all()
+                for author in authors:
+                    author_data = {
+                        'id': author.id,
+                        'author_name': author.author_name,
+                        'description': author.description
+                    }
+                    book_data['authors'].append(author_data)
+
+                # Получение информации о жанрах книги
+                genres = db.query(Genres).join(BooksGenres).filter(
+                    BooksGenres.book_id == book.id).all()
+                for genre in genres:
+                    genre_data = {
+                        'id': genre.id,
+                        'title_genre': genre.title_genre
+                    }
+                    book_data['genres'].append(genre_data)
+
                 books_data.append(book_data)
             return books_data
         else:
@@ -277,7 +301,6 @@ def add_genre_to_book(_book_id, _genre_id):
         genre = db.query(Genres).get(_genre_id)
         if book and genre:
             book_genre = BooksGenres(book_id=_book_id, genre_id=_genre_id)
-            print(book_genre)
             db.add(book_genre)
             db.commit()
             return True
@@ -455,9 +478,9 @@ def add_staff(_staff_data):
 # }
 
 # Обновить роль для сотрудника
-def update_staff_new_role(_get_name_staff, _new_role):
+def update_staff_new_role(_id, _new_role):
     with Session(autoflush=False, bind=engine) as db:
-        staff = db.query(Staff).filter_by(name=_get_name_staff).first()
+        staff = db.query(Staff).filter_by(id=_id).first()
         if staff:
             staff.role = _new_role
             db.commit()
@@ -466,9 +489,9 @@ def update_staff_new_role(_get_name_staff, _new_role):
 
 
 # Обновить уровень допуска для сотрудника
-def update_staff_new_access_level(_get_name_staff):
+def update_staff_new_access_level(_id):
     with Session(autoflush=False, bind=engine) as db:
-        staff = db.query(Staff).filter_by(name=_get_name_staff).first()
+        staff = db.query(Staff).filter_by(id=_id).first()
         if staff:
             staff.access_level += 1
             db.commit()

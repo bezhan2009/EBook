@@ -273,5 +273,3 @@ def get_order_details_route(order_id):
 
 
 # === УПРАВЛЕНИЕ ПЕРСОНАЛОМ ===
-
-# Ждем роуты
