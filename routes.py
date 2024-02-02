@@ -257,6 +257,8 @@ def update_order_status_route(order_id):
         return 'Invalid status', 400
 
     if repository.update_order_status(order_id, status):
+        if status == 'Completed':
+            repository.update_book_quantity_and_price(order_id)
         return 'Order status updated', 200
     return 'Order not found', 404
 

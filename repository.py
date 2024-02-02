@@ -1,8 +1,8 @@
-from sqlalchemy import and_
+from sqlalchemy import and_, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, joinedload
 from connection import engine
-from models import Books, Authors, Genres, Readers, BorrowedBooks, BooksGenres, BooksAuthors, Orders, OrderItems
+from models import Books, Authors, Genres, Readers, BorrowedBooks, BooksGenres, BooksAuthors, Orders, OrderItems, Staff
 from datetime import datetime
 
 Session = sessionmaker(autoflush=False, bind=engine)
@@ -381,14 +381,32 @@ def create_order(_book_ids):
 
 
 # Обновление статуса заказа
-def update_order_status(order_id, status):
+def update_order_status(_order_id, _status):
     with Session(autoflush=False, bind=engine) as db:
-        order = db.query(Orders).get(order_id)
+        order = db.query(Orders).get(_order_id)
         if order:
-            order.status = status
+            order.status = _status
             db.commit()
             return True
         return False
+
+
+# Обновляем количество книг в таблице books в случае "Completed, а также цены"
+def update_book_quantity_and_price(_order_id):
+    with Session(autoflush=False) as db:
+        order_items = db.query(OrderItems).filter_by(order_id=_order_id).all()
+
+        for item in order_items:
+            book_id = item.new_book_id
+            new_book_price = item.new_book_price
+            quantity = item.quantity
+
+            # Выполняем SQL-запрос для обновления количества книг в таблице books
+            db.execute(update(Books).where(Books.id == book_id).values(
+                available_copies=Books.available_copies + quantity, price=new_book_price))
+
+        db.commit()
+        return True
 
 
 # Информация по конкретному заказу
@@ -413,3 +431,95 @@ def get_order_details(order_id):
                 order_details['items'].append(item_details)
             return order_details
         return None
+
+
+# === УПРАВЛЕНИЕ ПЕРСОНАЛОМ ===
+
+# Добавить нового работника
+def add_staff(_staff_data):
+    with Session(autoflush=False, bind=engine) as db:
+        staff = Staff(**_staff_data)
+        db.add(staff)
+        db.commit()
+        if staff:
+            return True
+        else:
+            return False
+
+
+# # запрос для постмана
+# new_staff = {
+#   "name": "Marlon Brando",
+#   "role": "maker",
+#   "access_level": 2
+# }
+
+# Обновить роль для сотрудника
+def update_staff_new_role(_get_name_staff, _new_role):
+    with Session(autoflush=False, bind=engine) as db:
+        staff = db.query(Staff).filter_by(name=_get_name_staff).first()
+        if staff:
+            staff.role = _new_role
+            db.commit()
+            return True
+        return False
+
+
+# Обновить уровень допуска для сотрудника
+def update_staff_new_access_level(_get_name_staff):
+    with Session(autoflush=False, bind=engine) as db:
+        staff = db.query(Staff).filter_by(name=_get_name_staff).first()
+        if staff:
+            staff.access_level += 1
+            db.commit()
+            return True
+        return False
+
+
+# Удалить сотрудника (soft-delete)
+def delete_staff(_id):
+    with Session(autoflush=False, bind=engine) as db:
+        staff = db.query(Staff).filter_by(id=_id).first()
+        if staff:
+            staff.is_deleted = True
+            db.commit()
+            return {"message": "Работник успешно удален"}
+        else:
+            return {"error": "Работник не найден"}
+
+
+# Просмотр всех сотрудников
+def get_staff_all():
+    with Session(autoflush=False, bind=engine) as db:
+        staff_seek = db.query(Staff).all()
+        if staff_seek:
+            list_staff_data = []
+            for staff in staff_seek:
+                staff_data = {
+                    'id': staff.id,
+                    'name': staff.name,
+                    'role': staff.role,
+                    'access_level': staff.access_level,
+                    'is_deleted': staff.is_deleted
+                }
+                list_staff_data.append(staff_data)
+            return list_staff_data
+        else:
+            return None
+
+
+# Поиск сотрудника по id
+def get_staff(_id):
+    with Session(autoflush=False, bind=engine) as db:
+        staff = db.query(Staff).filter_by(id=_id).first()
+        if staff:
+            staff_by_id = {
+                'id': staff.id,
+                'name': staff.name,
+                'role': staff.role,
+                'access_level': staff.access_level,
+                'is_deleted': staff.is_deleted
+            }
+            return staff_by_id
+        else:
+            return False
