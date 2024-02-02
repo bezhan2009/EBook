@@ -390,7 +390,7 @@ def update_order_status(_order_id, _status):
             return True
         return False
 
-# Обновляем количество книг в таблице books в случае "Completed"
+# Обновляем количество книг в таблице books в случае "Completed, а также цены"
 
 
 def update_book_quantity_and_price(_order_id):
