@@ -1,5 +1,5 @@
 from sqlalchemy import and_, update
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import sessionmaker, joinedload
 from connection import engine
 from models import Books, Authors, Genres, Readers, BorrowedBooks, BooksGenres, BooksAuthors, Orders, OrderItems, Staff
@@ -459,32 +459,64 @@ def get_order_details(order_id):
 # === УПРАВЛЕНИЕ ПЕРСОНАЛОМ ===
 
 # Добавить нового работника
+# def add_staff(_staff_data):
+#     with Session(autoflush=False, bind=engine) as db:
+#         staff = Staff(**_staff_data)
+#         db.add(staff)
+#         db.commit()
+#         if staff:
+#             return True
+#         else:
+#             return False
+
+
 def add_staff(_staff_data):
-    with Session(autoflush=False, bind=engine) as db:
-        staff = Staff(**_staff_data)
-        db.add(staff)
-        db.commit()
-        if staff:
-            return True
-        else:
-            return False
+    try:
+        with Session(autoflush=False, bind=engine) as db:
+            staff = Staff(**_staff_data)
+            db.add(staff)
+            db.commit()
+    except SQLAlchemyError as e:
+        # Обработка ошибки
+        print(f"Error creating user: {e}")
+        # Откат транзакции в случае ошибки
+        db.rollback()
+        # Дополнительные действия в зависимости от вашего кейса
+        # Например, можно возвращать сообщение об ошибке или выбрасывать исключение
+        return f"Error creating user: {e}"
 
 
 # Поиск сотрудника по id
-def get_staff(_id):
-    with Session(autoflush=False, bind=engine) as db:
-        staff = db.query(Staff).filter_by(id=_id).first()
-        if staff:
-            staff_by_id = {
-                'id': staff.id,
-                'name': staff.name,
-                'role': staff.role,
-                'access_level': staff.access_level,
-                'is_deleted': staff.is_deleted
-            }
-            return staff_by_id
-        else:
-            return False
+def get_staff(name, password):
+    try:
+        with Session(autoflush=False, bind=engine) as db:
+            # Получение пользователя по имени пользователя и паролю
+            staff = db.query(Staff).filter(and_(Staff.name == name, Staff.password == password)).first()
+
+        return staff
+    except SQLAlchemyError as e:
+        # Обработка ошибки
+        print(f"Error getting user: {e}")
+        # Возвращаем None в случае ошибки
+        return None
+
+
+# Поиск сотрудника по id
+# def get_staff(_id):
+#     with Session(autoflush=False, bind=engine) as db:
+#         staff = db.query(Staff).filter_by(id=_id).first()
+#         if staff:
+#             staff_by_id = {
+#                 'id': staff.id,
+#                 'name': staff.name,
+#                 'password': staff.password,
+#                 'role': staff.role,
+#                 'access_level': staff.access_level,
+#                 'is_deleted': staff.is_deleted
+#             }
+#             return staff_by_id
+#         else:
+#             return False
 
 
 # Просмотр всех сотрудников
@@ -497,6 +529,7 @@ def get_staff_all():
                 staff_data = {
                     'id': staff.id,
                     'name': staff.name,
+                    'password': staff.password,
                     'role': staff.role,
                     'access_level': staff.access_level,
                     'is_deleted': staff.is_deleted

@@ -117,7 +117,8 @@ class Staff(Base):
     __tablename__ = "staff"
 
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
-    name = Column(String(length=70), nullable=False)
+    name = Column(String, unique=True)
+    password = Column(String)
     role = Column(String(length=32), nullable=False)
     access_level = Column(Integer, nullable=False)
     is_deleted = Column(Boolean, nullable=False, default=False)
