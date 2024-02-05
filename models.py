@@ -43,6 +43,7 @@ class Authors(Base):
                 nullable=False, index=True)
     author_name = Column(String(length=70), nullable=False, unique=False)
     description = Column(String)
+    book_id = Column(Integer, nullable=False)
 
 
 class BooksGenres(Base):
@@ -95,7 +96,7 @@ class Orders(Base):
     id = Column(Integer, primary_key=True)
     order_date = Column(DateTime, nullable=False)
     status = Column(String, nullable=False)
-    order_items = relationship("OrderItems", back_populates="order")
+    order_items = relationship("OrderItems")
 
 
 class OrderItems(Base):
@@ -116,6 +117,8 @@ class Staff(Base):
     name = Column(String(length=70), nullable=False)
     role = Column(String(length=32), nullable=False)
     access_level = Column(Integer, nullable=False)
+    password = Column(String(length=70), nullable=False)
+    is_deleted = Column(Boolean, nullable=False, default=False)
 
 
 Base.metadata.create_all(bind=engine)

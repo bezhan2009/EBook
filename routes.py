@@ -1,8 +1,14 @@
-from flask import jsonify, Blueprint, request, make_response
+from flask import jsonify, Flask, Blueprint, request, make_response
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, get_jwt
 import repository
+import service
 from connection import engine
-from models import Readers, Books
+from models import Readers, Books, Staff
 from sqlalchemy.orm import sessionmaker
+
+app = Flask(__name__)
+app.config['JWT_SECRET_KEY'] = 'super-secret'  # Задайте секретный ключ для подписи токенов
+jwt = JWTManager(app)
 
 app = Blueprint('routes', __name__)
 
@@ -188,7 +194,13 @@ def create_new_reader():
 
 # Удалить читателя по id
 @app.route("/readers/<int:reader_id>", methods=["DELETE"])
+@jwt_required()
 def delete_reader(reader_id):
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    user_role = claims['role']
+    if user_role != 'admin':
+        return jsonify(error="У вас нет доступа!"), 403
     result = repository.delete_reader_by_id(reader_id)
     if "error" in result:
         return jsonify(result), 404
@@ -198,7 +210,13 @@ def delete_reader(reader_id):
 
 # Поиск читателя по id
 @app.route("/readers/<int:reader_id>", methods=["GET"])
+@jwt_required()
 def get_single_reader_info(reader_id):
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    user_role = claims['role']
+    if user_role != 'admin':
+        return jsonify(error="У вас нет доступа!"), 403
     reader = repository.get_single_reader(reader_id)
     if not reader:
         return jsonify(error="Читатель не найден"), 404
@@ -213,9 +231,14 @@ def get_single_reader_info(reader_id):
 
 # Показать всех читателей
 @app.route("/readers", methods=["GET"])
+@jwt_required()
 def get_all_readers():
-    '''Просмотр списка читателей'''
     with Session(autoflush=False, bind=engine) as db:
+        user_id = get_jwt_identity()
+        claims = get_jwt()
+        user_role = claims['role']
+        if user_role != 'admin':
+            return jsonify(error="У вас нет доступа!"), 403
         readers = db.query(Readers).all()
         serialized_readers = []
         for reader in readers:
@@ -245,10 +268,8 @@ def get_reader_activity_route(reader_id):
 @app.route('/orders', methods=['POST'])
 def create_order_route():
     book_ids = request.json.get('book_ids')
-    # print(book_ids)
-    # print('*' * 1120)
     repository.create_order(book_ids)
-    return 'Order created', 201
+    return 'Заказ создан', 201
 
 
 # Обновление статуса заказа
@@ -259,5 +280,142 @@ def update_order_status_route(order_id):
         return 'Invalid status', 400
 
     if repository.update_order_status(order_id, status):
+        if status == 'Completed':
+            repository.update_book_quantity_and_price(order_id)
         return 'Order status updated', 200
     return 'Order not found', 404
+
+
+# Информация по конкретному заказу
+@app.route('/orders/<int:order_id>', methods=['GET'])
+def get_order_details_route(order_id):
+    order_details = repository.get_order_details(order_id)
+    if order_details:
+        return jsonify(order_details), 200
+    return jsonify({'error': 'Заказ не найден'}), 404
+
+
+# === УПРАВЛЕНИЕ ПЕРСОНАЛОМ ===
+
+# Добавить нового работника
+@app.route("/staff", methods=["POST"])
+@jwt_required()
+def create_new_staff():
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    user_role = claims['role']
+    if user_role != 'admin':
+        return jsonify(error="У вас нет доступа!"), 403
+    staff_data = request.json
+    staff = repository.add_staff(staff_data)
+    if staff:
+        return {"message": "Работник успешно добавлен"}, 201
+    else:
+        return {"error": "Ошибка, попробуйте заново"}, 404
+
+
+# Поиск сотрудника по id
+@app.route("/staff/<int:staff_id>", methods=["GET"])
+@jwt_required()
+def get_staff_by_id(staff_id):
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    user_role = claims['role']
+    if user_role != 'admin':
+        return jsonify(error="У вас нет доступа!"), 403
+    staff = repository.get_staff(staff_id)
+    if not staff:
+        return jsonify(error="staff not found"), 404
+    else:
+        return jsonify(staff), 200
+
+
+# Просмотр всех сотрудников
+@app.route("/staff", methods=["GET"])
+@jwt_required()
+def get_all_staff():
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    user_role = claims['role']
+    if user_role != 'admin':
+        return jsonify(error="У вас нет доступа!"), 403
+    staff = repository.get_staff_all()
+    if not staff:
+        return jsonify(error="staff not found"), 404
+    else:
+        return jsonify(staff), 200
+
+
+# Обновить роль для сотрудника
+@app.route("/staff/<int:staff_id>/role", methods=["PUT"])
+@jwt_required()
+def update_role_staff(staff_id):
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    user_role = claims['role']
+    if user_role != 'admin':
+        return jsonify(error="У вас нет доступа!"), 403
+    updated_data = request.json.get('role')
+    updated_staff = repository.update_staff_new_role(staff_id, updated_data)
+    if not updated_staff:
+        return jsonify(error="Сотрудник не найден"), 404
+    return jsonify(message="Роль успешно обновлена"), 200
+
+
+# Обновить уровень допуска для сотрудника
+@app.route("/staff/<int:staff_id>/level", methods=["PUT"])
+@jwt_required()
+def update_access_level_staff(staff_id):
+    # updated_data = request.json.get(staff_id)
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    user_role = claims['role']
+    if user_role != 'admin':
+        return jsonify(error="У вас нет доступа!"), 403
+    updated_staff = repository.update_staff_new_access_level(staff_id)
+    if updated_staff:
+        return jsonify(message="Уровень доступа успешно обновлен"), 200
+    else:
+        return jsonify(error="Автор не найден"), 404
+
+
+# Удалить сотрудника (soft-delete)
+@app.route("/staff/<int:staff_id>", methods=["DELETE"])
+@jwt_required()
+def delete_staff(staff_id):
+    user_id = get_jwt_identity()
+    claims = get_jwt()
+    user_role = claims['role']
+    if user_role != 'admin':
+        return jsonify(error="У вас нет доступа!"), 403
+    result = repository.delete_staff(staff_id)
+    if "error" in result:
+        return jsonify(result), 404
+    else:
+        return jsonify(result), 200
+
+
+@app.route('/auth/sign-up', methods=["POST"])
+def sign_up():
+    data = request.get_json()
+    s = Staff(name=data["name"], password=data["password"], role=data["role"], access_level=data["access_level"])
+    err = service.create_staff(s)
+    if err is not None:
+        return {"message": err}, 400
+
+    return {"status": "successfully registered"}, 201
+
+
+@app.route('/auth/sign-in', methods=["POST"])
+def sign_in():
+    data = request.get_json()
+    username = data["name"]
+    password = data["password"]
+    user_id, err = service.get_staff(username, password)
+    if err is not None:
+        return {"error": err}, 401
+    get_role = repository.get_role_staff(user_id)
+    additional_claims = {"role": get_role}
+    access_token = create_access_token(identity=user_id,
+                                       additional_claims=additional_claims)
+    return jsonify(access_token=access_token), 200

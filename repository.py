@@ -1,8 +1,8 @@
-from sqlalchemy import and_
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import and_, update
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.orm import sessionmaker, joinedload
 from connection import engine
-from models import Books, Authors, Genres, Readers, BorrowedBooks, BooksGenres, BooksAuthors, Orders, OrderItems
+from models import Books, Authors, Genres, Readers, BorrowedBooks, BooksGenres, BooksAuthors, Orders, OrderItems, Staff
 from datetime import datetime
 
 Session = sessionmaker(autoflush=False, bind=engine)
@@ -40,8 +40,32 @@ def get_book_all():
                     'book_location': book.book_location,
                     'description': book.description,
                     'price': book.price,
-                    'available_copies': book.available_copies
+                    'available_copies': book.available_copies,
+                    'authors': [],
+                    'genres': []
                 }
+
+                # Получение информации об авторах книги
+                authors = db.query(Authors).join(BooksAuthors).filter(
+                    BooksAuthors.book_id == book.id).all()
+                for author in authors:
+                    author_data = {
+                        'id': author.id,
+                        'author_name': author.author_name,
+                        'description': author.description
+                    }
+                    book_data['authors'].append(author_data)
+
+                # Получение информации о жанрах книги
+                genres = db.query(Genres).join(BooksGenres).filter(
+                    BooksGenres.book_id == book.id).all()
+                for genre in genres:
+                    genre_data = {
+                        'id': genre.id,
+                        'title_genre': genre.title_genre
+                    }
+                    book_data['genres'].append(genre_data)
+
                 books_data.append(book_data)
             return books_data
         else:
@@ -277,7 +301,6 @@ def add_genre_to_book(_book_id, _genre_id):
         genre = db.query(Genres).get(_genre_id)
         if book and genre:
             book_genre = BooksGenres(book_id=_book_id, genre_id=_genre_id)
-            print(book_genre)
             db.add(book_genre)
             db.commit()
             return True
@@ -381,11 +404,175 @@ def create_order(_book_ids):
 
 
 # Обновление статуса заказа
-def update_order_status(order_id, status):
+def update_order_status(_order_id, _status):
     with Session(autoflush=False, bind=engine) as db:
-        order = db.query(Orders).get(order_id)
+        order = db.query(Orders).get(_order_id)
         if order:
-            order.status = status
+            order.status = _status
             db.commit()
             return True
         return False
+
+
+# Обновляем количество книг в таблице books в случае "Completed, а также цены"
+def update_book_quantity_and_price(_order_id):
+    with Session(autoflush=False) as db:
+        order_items = db.query(OrderItems).filter_by(order_id=_order_id).all()
+
+        for item in order_items:
+            book_id = item.new_book_id
+            new_book_price = item.new_book_price
+            quantity = item.quantity
+
+            # Выполняем SQL-запрос для обновления количества книг в таблице books
+            db.execute(update(Books).where(Books.id == book_id).values(
+                available_copies=Books.available_copies + quantity, price=new_book_price))
+
+        db.commit()
+        return True
+
+
+# Информация по конкретному заказу
+def get_order_details(order_id):
+    with Session(autoflush=False, bind=engine) as db:
+        order = db.query(Orders).get(order_id)
+        if order:
+            order_details = {
+                'order_id': order.id,
+                'order_date': order.order_date,
+                'status': order.status,
+                'items': []
+            }
+            for item in order.order_items:
+                book = db.query(Books).get(item.new_book_id)
+                item_details = {
+                    'book_id': book.id,
+                    'book_title': book.title,
+                    'book_price': item.new_book_price,
+                    'quantity': item.quantity
+                }
+                order_details['items'].append(item_details)
+            return order_details
+        return None
+
+
+# === УПРАВЛЕНИЕ ПЕРСОНАЛОМ ===
+
+# Добавить нового работника
+# def add_staff(_staff_data):
+#     with Session(autoflush=False, bind=engine) as db:
+#         staff = Staff(**_staff_data)
+#         db.add(staff)
+#         db.commit()
+#         if staff:
+#             return True
+#         else:
+#             return False
+
+
+def add_staff(_staff_data):
+    try:
+        with Session(autoflush=False, bind=engine) as db:
+            # staff = Staff(name=_staff_data.get('name'), password=_staff_data.get('password'), access_level=1, role="Admin")
+            db.add(_staff_data)
+            db.commit()
+    except SQLAlchemyError as e:
+        # Обработка ошибки
+        print(f"Error creating user: {e}")
+        # Откат транзакции в случае ошибки
+        if 'db' in locals():
+            db.rollback()
+        return f"Error creating user: {e}"
+
+
+# Поиск сотрудника по id
+def get_staff(name, password):
+    try:
+        with Session(autoflush=False, bind=engine) as db:
+            # Получение пользователя по имени пользователя и паролю
+            staff = db.query(Staff).filter(and_(Staff.name == name, Staff.password == password)).first()
+
+        return staff
+    except SQLAlchemyError as e:
+        # Обработка ошибки
+        print(f"Error getting user: {e}")
+        # Возвращаем None в случае ошибки
+        return None
+
+
+# Поиск сотрудника по id
+# def get_staff(_id):
+#     with Session(autoflush=False, bind=engine) as db:
+#         staff = db.query(Staff).filter_by(id=_id).first()
+#         if staff:
+#             staff_by_id = {
+#                 'id': staff.id,
+#                 'name': staff.name,
+#                 'password': staff.password,
+#                 'role': staff.role,
+#                 'access_level': staff.access_level,
+#                 'is_deleted': staff.is_deleted
+#             }
+#             return staff_by_id
+#         else:
+#             return False
+
+
+# Просмотр всех сотрудников
+def get_staff_all():
+    with Session(autoflush=False, bind=engine) as db:
+        staff_seek = db.query(Staff).all()
+        if staff_seek:
+            list_staff_data = []
+            for staff in staff_seek:
+                staff_data = {
+                    'id': staff.id,
+                    'name': staff.name,
+                    'password': staff.password,
+                    'role': staff.role,
+                    'access_level': staff.access_level,
+                    'is_deleted': staff.is_deleted
+                }
+                list_staff_data.append(staff_data)
+            return list_staff_data
+        else:
+            return None
+
+
+# Обновить роль для сотрудника
+def update_staff_new_role(_id, _new_role):
+    with Session(autoflush=False, bind=engine) as db:
+        staff = db.query(Staff).filter_by(id=_id).first()
+        if staff:
+            staff.role = _new_role
+            db.commit()
+            return True
+        return False
+
+
+# Обновить уровень допуска для сотрудника
+def update_staff_new_access_level(_id):
+    with Session(autoflush=False, bind=engine) as db:
+        staff = db.query(Staff).filter_by(id=_id).first()
+        if staff:
+            staff.access_level += 1
+            db.commit()
+            return True
+        return False
+
+
+# Удалить сотрудника (soft-delete)
+def delete_staff(_id):
+    with Session(autoflush=False, bind=engine) as db:
+        staff = db.query(Staff).filter_by(id=_id).first()
+        if staff and staff.role != "admin":
+            staff.is_deleted = True
+            db.commit()
+            return {"message": "Работник успешно удален"}
+        else:
+            return {"error": "Работник не найден или у вас нет уполномочий для удаления этого работника"}
+
+def get_role_staff(_staff_id):
+    with Session(autoflush=False, bind=engine) as db:
+        staff_role = db.query(Staff).filter_by(id=_staff_id).first()
+        return staff_role.role
