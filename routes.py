@@ -1,8 +1,7 @@
 from flask import jsonify, Blueprint, request, make_response
-from flask_jwt_extended import create_access_token
 import repository
 from connection import engine
-from models import Readers, Books, Staff
+from models import Readers, Books
 from sqlalchemy.orm import sessionmaker
 
 app = Blueprint('routes', __name__)
@@ -334,31 +333,3 @@ def delete_staff(staff_id):
         return jsonify(result), 404
     else:
         return jsonify(result), 200
-
-
-# ====== АВТОРИЗАЦИЯ ПЕРСОНАЛА ========
-
-@app.route('/auth/sign-up', methods=["POST"])
-def sign_up():
-    data = request.get_json()
-    s = Staff(name=data["name"], password=data["password"])
-    err = service.create_staff(s)
-    if err is not None:
-        return {"message": err}, 400
-
-    return {"status": "successfully registered"}, 201
-
-
-@app.route('/auth/sign-in', methods=["POST"])
-def sign_in():
-    data = request.get_json()
-    name = data["name"]
-    password = data["password"]
-    staff_id, err = service.get_staff(name, password)
-    if err is not None:
-        return {"error": err}, 401
-
-    additional_claims = {"role": "admin"}
-    access_token = create_access_token(identity=staff_id,
-                                       additional_claims=additional_claims)
-    return jsonify(access_token=access_token), 200

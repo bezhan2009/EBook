@@ -108,17 +108,13 @@ class OrderItems(Base):
     new_book_price = Column(Float, nullable=False)
     quantity = Column(Integer, nullable=False)
     new_book = relationship("Books", foreign_keys=[new_book_id])
-    # Добавляем отношение
-    order = relationship("Orders", back_populates="order_items")
-    book = relationship("Books")  # Добавляем отношение
 
 
 class Staff(Base):
     __tablename__ = "staff"
 
     id = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
-    name = Column(String, unique=True)
-    password = Column(String)
+    name = Column(String(length=70), nullable=False)
     role = Column(String(length=32), nullable=False)
     access_level = Column(Integer, nullable=False)
     is_deleted = Column(Boolean, nullable=False, default=False)
