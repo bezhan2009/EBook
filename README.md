@@ -184,7 +184,7 @@
 
 1. **Клонирование репозитория:**
    ```bash
-   git clone <URL репозитория>
+   git clone https://github.com/bezhan2009/EBook
    ```
 
 2. **Установка зависимостей:**
